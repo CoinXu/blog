@@ -10,7 +10,7 @@ begin-value      ::= (offset-value | syncbase-value
                       | wallclock-sync-value | "indefinite" )
 ```
 
-# Clock-value
+# <span id="clock-value">Clock-value</span>
 ```
 Clock-value         ::= ( Full-clock-value | Partial-clock-value
                        | Timecount-value )
@@ -29,7 +29,7 @@ DIGIT               ::= [0-9]
 
 # offset-value
 指定动画开始时间与 `document` 开始时(relative to the document begin)的偏移量。
-+ 语法: ("+"|"-")? Clock-value
++ 语法: ("+"|"-")? [Clock-value](#clock-value)
 ```XML
 <rect id="a" x="0" y="10" width="0" height="20">
     <animate attributeType="XML" attributeName="width"
@@ -46,3 +46,8 @@ DIGIT               ::= [0-9]
 `a` 中在 `DOMContentLoaded` 1s后开始,执行1s,也就是说在 `DOMContentLoaded` 后2s执行完成。
 `b` 的 `begin="-2s"`, 表示偏移 `DOMContentLoaded` 时间前2s,那么,总共执行4s,同样是在
 `DOMContentLoaded` 后2s执行完成。
+
+
+
+
+
