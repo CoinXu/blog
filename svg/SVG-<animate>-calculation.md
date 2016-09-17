@@ -57,14 +57,39 @@
   
 http://www.w3.org/TR/SVG/animate.html#KeyTimesAttribute
 
-<img src="./image/cubic_Bézier_(1,0,.25,.25).png"/>
-
-
 Note:
 + 取值范围为 0 - 1。
 + 如果 `calcMode`的值不为 `spline`, 该属性将会被忽略。
 + 如果定义的值有错(错误的值、过多或过少),该文档碎片将会报错。
 + 该值必须比 `keyTimes` 少一个。
+
+<img src="./image/cubic_Bézier_(1,0,.25,.25).png" width=200/>
+[图片来源](http://cubic-bezier.com/#1,0,.25,.25)
+
+上图所取的点为 (1, 0, .25, .25) 。从图可以看出,最开始的时候变量变化的速度比较平稳,
+过中间位置后,变量迅速增加。
+```XML
+<rect x="10" y="10" width="0" height="30">
+    <animate attributeName="width" dur="2s"
+             values="0; 200"
+             keyTimes="0; 1"
+             calcMode="spline"
+             fill="freeze"
+             keySplines="1 0 .25 .25"/>
+</rect>
+```
+以上动画在大约1s左右后,宽度会迅速增加。
+<table>
+    <tr>
+        <td><img src="./image/cubic_Bézier_(0,.1,.5,.9).png" width=200/></td>
+        <td><img src="./image/cubic_Bézier_(0,.5,1,0).png" width=200/></td>
+        <td><img src="./image/cubic_Bézier_(0,.75,.35,.85).png" width=200/></td>
+    </tr>
+    <tr>
+        
+    </tr>
+</table>
+
 
 ### from="values"
 指定动画的开始值。
