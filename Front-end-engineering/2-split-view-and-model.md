@@ -23,8 +23,8 @@ interface OrderDesc {
 ```
 代码大致如下:
 ```TypeScript
-const userList = Array<UserDesc>
-const orderList = Array<OrderDesc>
+type userList = Array<UserDesc>
+type orderList = Array<OrderDesc>
 // 渲染用户列表
 <ul>
 {
@@ -64,14 +64,15 @@ function renderListView(vm: ViewModel){
     )
 }
 ```
-此时渲染过程为`Model -> ViewModel -> View`，View与Model完全独立，
-如果要使用该View，必须将数据转为ViewModel。
+渲染如下：
 ```TypeScript
 const user_vm = userList.map(m => ({text: m.name}))
 const order_vm = orderList.map(m => ({text: m.title}))
 renderListView(user_vm)
 renderListView(order_vm)
 ```
+此时渲染过程为`Model -> ViewModel -> View`，View与Model完全独立，
+如果要使用该View，必须将数据转为ViewModel。
 
 # Model
 
