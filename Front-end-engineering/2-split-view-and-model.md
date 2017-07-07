@@ -84,8 +84,8 @@ Model功能主要包含数据获取与存储，以及一些简单的处理。
 实现Model分离之前，需要考虑接口的统一管理。个人认为这是一个前端工程规划是否合理的重要考核指标之一。
 
 此处需要做两件事情：
-＋ 统一接口返回内容的结构
-＋ 统一资接口定义
++ 统一接口返回内容的结构
++ 统一资接口定义
 
 ## 返回值结构定义
 接口返回内容需要包含如下信息：
@@ -94,7 +94,7 @@ interface ResponseStrct<T> {
   success: boolean
   code: number
   message: string
-  result: <T>
+  result: T
   type: string | number
 }
 ```
