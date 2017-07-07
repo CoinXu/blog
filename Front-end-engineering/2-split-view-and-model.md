@@ -104,8 +104,9 @@ interface ResponseStrct<T> {
 前端可以依据该接口做统一的预处理，比如检测`success`或`code`值显示`message`。
 
 ## 统一接口定义
-接口包含一个url，以及一些调用方式，诸如`post`,`get`,`put`。由于服务器选型方案不同，可能需要解析url(Restfull或graphQ)，
-还可能需要对返回值进行简单的处理，比如返回`json`，如果每次调用都去处理，未免太傻了些。
+接口包含一个url，以及一些调用方式，诸如`post`,`get`,`put`。
+由于服务器选型方案不同，可能需要解析url(Restfull或graphQ)，还可能需要对返回值进行简单的处理，比如返回`json`。
+如果每次调用都去处理，未免太傻了些。
 
 可以定义如下资源管理类，部份方法如下
 ```TypeScript
@@ -141,7 +142,7 @@ const destory = await UserResource.destroy.get({id: 'user_id'}).json()
 所以验证代码最好使用单独的模块实现。
 
 基本的验证类型包含type、enum、required、in、oneof、bound等。
-React使用的PropTypes接口设计得比较好，可以衍生出如下结构以适应接口参数验证。
+React使用的PropTypes接口设计得比较好，可以定义如下结构以适应最小粒度的参数验证代码。
 ```TypeScript
 inerface ChekResult {
   message: string | null
