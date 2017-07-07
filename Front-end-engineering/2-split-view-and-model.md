@@ -144,7 +144,7 @@ const destory = await UserResource.destroy.get({id: 'user_id'}).json()
 基本的验证类型包含type、enum、required、in、oneof、bound等。
 React使用的PropTypes接口设计得比较好，可以定义如下结构以适应最小粒度的参数验证代码。
 ```TypeScript
-inerface ChekResult {
+interface ChekResult {
   message: string | null
   success: boolean
 }
