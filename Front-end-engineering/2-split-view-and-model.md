@@ -1,6 +1,6 @@
 在[上一篇](./1-intro.md)中对实现视图层进行了一些思考和实践，总结出应该将View与Model拆分开来。
 
-上篇中将拆分View与Model的目的简单的总结为 `先 **解藕** 后 **组合**`，本篇将分别深入讨论View与Model的拆分目的与实现思路。
+上篇中将拆分View与Model的目的简单的总结为 先 **解藕** 后 **组合**，本篇将分别深入讨论View与Model的拆分目的与实现思路。
 
 # View
 View要做到解藕，首先要与Model隔离开来。
@@ -20,6 +20,7 @@ interface Order {
     title: string
 }
 ```
+
 代码大致如下:
 ```TSX
 type userList = Array<User>
@@ -37,19 +38,16 @@ type orderList = Array<Order>
 }
 </ul>
 ```
+
 因为两个Model定义不同，则不得不书写重复的代码。
 此时的渲染过程为`Model -> View`
 
 解决这个问题也很简单，既然渲染结构相同，只是数据不同，那么将两份数据映射成相同的结构即可，只需要加一个中间数据层。
-
-我们可以考虑一下，如何设计一下新的View。
-
-此时需要我们跳出View与Model关联的思维方式。
-
+我们可以考虑一下，如何设计一下新的View。此时需要我们跳出View与Model关联的思维方式。
 View有其自己的固定格式数据，无需理会外面的数据是什么样子，如果要使用该View，就需要提供这样的数据格式。
-
 人们将渲染View需要的数据称之为ViewModel，也就是上文中的中间数据层，View则可以如下设计：
-```TST
+
+```TSX
 interface ViewList = {
     text: string
 }
@@ -72,14 +70,12 @@ const OrderViewModel:ViewModel = OrderList.map(m => ({text: m.title}))
 renderListView(UserViewModel)
 renderListView(OrderViewModel)
 ```
+
 此时渲染过程为`Model -> ViewModel -> View`，View与Model完全独立。
 
 # Model
-
 Model功能主要包含数据获取与存储，以及一些简单的处理。
-
 实现Model分离之前，需要考虑接口的统一管理。个人认为这是一个前端工程规划是否合理的重要考核指标之一。
-
 此处需要做两件事情：
 + 统一接口返回内容的结构
 + 统一接口定义
@@ -101,7 +97,6 @@ interface ResponseStruct<T> {
 ```
 `code`字段一般要求与`http`状态保持一致，这有助于后期日志处理。
 `type`字段标识`result`数据类型，根据业务需要，可以扩展其他字段。
-
 前端可以依据该接口做统一的预处理，比如检测`success`或`code`值显示`message`。
 
 ## 统一接口定义
@@ -119,6 +114,7 @@ interface Resource<T> {
   text():Promise<ResponseStruct<T>>
 }
 ```
+
 使用时，先统一定义
 ```TypeScript
 // 定义
@@ -129,6 +125,7 @@ const UserResource = {
   update: new Resource<UserModel>('/app/user/update')
 }
 ```
+
 然后调用
 ```TypeScript
 const user:UserModel = await UserResource.create.post({name:'user_name', age:1}).json()
@@ -163,6 +160,7 @@ interface PropTypes {
   array: Checker
 }
 ```
+
 使用如下
 ```TypeScript
 const checker = defineTypes({
@@ -174,7 +172,6 @@ const result: CheckResult = checker({
   num: 1
 })
 ```
-
 `checker`定义后，可在不同的场景下多次使用。
 
 下一篇谈谈 Model -> ViewModel -> View -> UI 数据流控制

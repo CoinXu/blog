@@ -9,18 +9,12 @@
 指定动画展现方式,默认值为 `linear`,可以取下列中的任意值。
 如果该属性不支持线性插值,将会被忽略,此时将会使用 `discrete` 属性。
 
-+ discrete
-动画函数从一个值到下一个值时,不篡改任何值。
-+ linear
-在 values 之间简单的线性插值
-
-+ paced
-在动画执行期间产生相同的插值。该属性只支持值为线性取值范围的属性。
-如果指定该值,则会忽略 `keyTimes` 和 `keySplines` 属性。
-
-+ spline
-从values列表中取下一个值，经三次方贝塞尔时间函数生成一个新值，然后插入。
-这些点由 keyTimes 属性定义，在每个时间片内控制这些点由 keySplines 属性定义。
++ discrete: 动画函数从一个值到下一个值时,不篡改任何值。
++ linear: 在 values 之间简单的线性插值
++ paced: 在动画执行期间产生相同的插值。该属性只支持值为线性取值范围的属性。
+  如果指定该值,则会忽略 `keyTimes` 和 `keySplines` 属性。
++ spline: 从values列表中取下一个值，经三次方贝塞尔时间函数生成一个新值，然后插入。
+  这些点由 keyTimes 属性定义，在每个时间片内控制这些点由 keySplines 属性定义。
 
 ### values="list"
 一个以分号分隔的列表。
@@ -57,7 +51,7 @@
 
 http://www.w3.org/TR/SVG/animate.html#KeyTimesAttribute
 
-Note:
+__Note__
 + 取值范围为 0 - 1。
 + 如果 `calcMode`的值不为 `spline`, 该属性将会被忽略。
 + 如果定义的值有错(错误的值、过多或过少),该文档碎片将会报错。
@@ -87,7 +81,6 @@ Note:
     </tr>
 </table>
 
-
 ### from="values"
 指定动画的开始值。
 
@@ -96,5 +89,4 @@ Note:
 
 ### by="value"
 指定一个相对偏移量。
-
 
