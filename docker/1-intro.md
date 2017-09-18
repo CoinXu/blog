@@ -36,8 +36,7 @@
 
 如何证明docker确实可行呢？可以参考[Docker在京东的使用情况](http://www.dockerinfo.net/4165.html)。
 
-对于一个可怜的前端来说，Docker能作什么？
-
+#### 对于一个可怜的前端来说，Docker能作什么？
 1. 解决组内开发环境统一问题
 2. 解决测试环境问题
 3. 解决生产环境问题
@@ -51,21 +50,20 @@
 不觉得浪费时间吗？(请记住一点，折腾工具并不会带给你半点实用的收获，你只是学会了工具的几个可怜的命令行而已)。
 
 如果某位看官觉得：爷就喜欢折腾，折腾使我快乐，使我成长，使我不能自己...
-后面的也不用看了，爷不希得和你说...
+这后面的也不用看了，爷不希得和你说...
 
 # 使用流程
-前面废话了这么，现在先来看看docker的使用流程是怎样的，我再不放干货的话看官可能要骂我灌水了。
-下面以前端node开发环境来说明如何将开发环境搬牵到docker中，纯干货！
+前面废话了这么，我再不放干货的话看官可能要骂我灌水了，现在先来看看docker的使用流程是怎样的。
+以前端node开发环境来说明如何将开发环境搬牵到docker中，纯干货！
 具体的名词后面再解释，现在只关心步骤，只有四步。
 
-1. 建立docker镜像(image)，此处搭建一个完整的Linux环境
-   使用Dockerfile描述一个image，一个简单的例子如下：
+1. 建立docker镜像(image)，此处搭建一个完整的Linux环境，使用Dockerfile描述一个image，一个简单的例子如下：
    ```
    FROM ubuntu:16.04
    ENV HOME /root
    ENV DEBIAN_FRONTEND noninteractive
    VOLUME /data/docker
-   RUN apt-get update && apt-get clean                                             \
+   RUN apt-get update && apt-get clean                                          \
    	&& apt-get install -y sudo                                                  \
    	&& apt-get install -y build-essential                                       \
    	&& apt-get install -y wget                                                  \
@@ -86,8 +84,8 @@
    	&& rm -rf /var/lib/apt/lists/*
    CMD ["/bin/bash"]
    ```
-   我撒谎了，以上例子其实不算简单的...应该说是比较复杂了。
-   我在其中安装了`sudo`, `wget`, `curl`, `nodejs`及其依赖的`python`、`build-essential`，
+   我撒谎了，以上例子其实不算简单的...
+   在其中安装了`sudo`, `wget`, `curl`, `nodejs`及其依赖的`python`、`build-essential`，
    还有开发常用的`git`,`yarn`...
 
    诸位也不用退缩，这是一个定制性比较强的image了，其实平常所需的开发软件官方都有提供Dockerfile，
