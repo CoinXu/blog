@@ -54,7 +54,7 @@
   曲线起始于x1走向y1，并从x2的方向来到y2。
   一般不会经过y1或x2；这两个点只是在那里提供方向资讯。
   x1和y1之间的间距，决定了曲线在转而趋进y2之前，走向x2方向的“长度有多长”。
-  
+
 http://www.w3.org/TR/SVG/animate.html#KeyTimesAttribute
 
 Note:
@@ -84,9 +84,6 @@ Note:
         <td><img src="./image/cubic_Bézier_(0,.1,.5,.9).png" width=200/></td>
         <td><img src="./image/cubic_Bézier_(0,.5,1,0).png" width=200/></td>
         <td><img src="./image/cubic_Bézier_(0,.75,.35,.85).png" width=200/></td>
-    </tr>
-    <tr>
-        
     </tr>
 </table>
 

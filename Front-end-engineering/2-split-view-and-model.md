@@ -161,7 +161,7 @@ interface PropTypes {
   string: Checker
   number: Checker
   array: Checker
-} 
+}
 ```
 使用如下
 ```TypeScript
@@ -170,11 +170,11 @@ const checker = defineTypes({
   num: PropTypes.number.isRequired
 })
 const result: CheckResult = checker({
-  str:'s', 
+  str:'s',
   num: 1
 })
 ```
 
 `checker`定义后，可在不同的场景下多次使用。
 
-## 下一篇谈谈 Model -> ViewModel -> View -> UI 数据流控制
+下一篇谈谈 Model -> ViewModel -> View -> UI 数据流控制
