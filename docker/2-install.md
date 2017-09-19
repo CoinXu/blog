@@ -92,7 +92,7 @@ Linux大致过程如下，当然你也可以通过各种安装包(*.deb)来安�
 这是微软官方中文文档，请安照步骤完成。在某些系统中，开启`Hyper-V`可能还要去主板中设置参数。
 在主板中的配置项一般称之为`Virtualization Technology (VTx)`或类似的名称。
 
-如果你的主机不满足这写要求，请看跳过此段，进入[Docker Toolbox](#docker-toolbox)。不过我强烈建议
+如果你的主机不满足以上要求，请跳过此段，进入[Docker Toolbox](#docker-toolbox)。不过我强烈建议
 将硬件升级到满足上面的要求，只要不是老古董电脑，基本都是支持该功能的，你要做的可能只是升级到windows 10。
 
 开启`Hypver-V`之后，可以在Windows Features面板中看到`Hypver-V`已勾上。
@@ -104,7 +104,7 @@ Linux大致过程如下，当然你也可以通过各种安装包(*.deb)来安�
 
 ### Docker Toolbox
 如果你的电脑不支持 Hypver-V，则需要使用 Docker Toolbox 来提供 Hypver-V 的功能。
-此处其实我不太想将过多的时间花在 Docker Toolbox 上，因为实在没有必要。
+我不太想将过多的时间花在 Docker Toolbox 上，因为实在没有必要。
 此处就简单的从[文档](https://docs.docker.com/toolbox/overview/)上摘取一些内容说明。
 
 Docker Toolbox是为旧的Mac和Windows系统提供Docker需要的环境的一体解决方案。
