@@ -10,5 +10,5 @@
 
 ## Docker
 + [概述](./docker/1-intro.md)
-+ 安装
++ [安装](./docker/2-install.md)
 
