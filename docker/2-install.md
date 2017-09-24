@@ -97,7 +97,7 @@ Linux大致过程如下，当然你也可以通过各种安装包(*.deb)来安�
 
 开启`Hypver-V`之后，可以在Windows Features面板中看到`Hypver-V`已勾上。
 
-<img src="./hyper-v-enable-status.png" >
+![hyper-v-enable-status.png](./hyper-v-enable-status.png)
 
 之后可以下载[Get Docker for Windows](https://docs.docker.com/docker-for-windows/install/#download-docker-for-windows)
 这是一个exe安装文件，可直接运行，不必再折腾。
@@ -123,11 +123,13 @@ Docker Toolbox也是一个有界面的安装包，点几下就安装完成了。
 
 ## 启动
 windows和mac的docker都是有gui的。
+
 ### Windows
-<img src="./docker-windows.png" >
+![docker-windows.png](./docker-windows.png)
 
 ### Mac
-<img src="./docker-mac.png" >
+![docker-mac.png](./docker-mac.png)
+
 
 不得不说，这LOGO真萌！
 
@@ -136,7 +138,7 @@ windows和mac的docker都是有gui的。
 众所周知，国内的网络环境问题...
 所以下载完之后，建议你立马去找一个Docker镜像国内镜像，网上应该能搜出不少吧...比如我用的是阿里云的。
 
-<img src="./docker-daemon.png" >
+![docker-daemon.png](./docker-daemon.png)
 
 [下一篇](./3-docker-overview.md) 解释Docker中的一些概念。
 
