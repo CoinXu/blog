@@ -25,7 +25,7 @@ CMD python /app/app.py
 运行中的容器所有变化(比如写入新文件、修改已存在的文件、删除文件)都将写入该层。
 下图展示了一个基于Ubuntu 15.04的镜像。
 
-![container-layers.jpg](./container-layers.jpg)
+![container-layers](https://raw.githubusercontent.com/CoinXu/blog/master/docker/container-layers.jpg)
 
 存储驱动处理这些镜像层彼此交互方式的细节，不同的存储驱动都可以是用，只是在不同的情况下有各自的优缺点。
 
@@ -36,7 +36,7 @@ CMD python /app/app.py
 由于每个容器有自己的可写容器层，并且所有的改变都存在容器层中，
 所以多个容器可以共享相同的底层镜像，还可以有自己的数据状态。下图展示了多个容器共享同一个Ubuntu 15.04 镜像。
 
-![sharing-layers.jpg](./sharing-layers.jpg)
+![sharing-layers.jpg](https://raw.githubusercontent.com/CoinXu/blog/master/docker/sharing-layers.jpg)
 
 > __注__：如果你需要多个镜像共同访问同一个已存的数据，可以将数据存在一个Docker volume中并挂载到你的容器。
 
@@ -263,7 +263,7 @@ CoW不仅节省空间，也可以减少启动时间。当你启动一个(或多�
 下图展示了单个Docker主机运行两个容器的情形，每个容器存在于本地存储区域(/var/lib/docker/...)中，
 在主机上还有一个共享数据卷直接挂载到两个容器上，地址为`/data`。
 
-![shared-volume.jpg](./shared-volume.jpg)
+![shared-volume.jpg](https://raw.githubusercontent.com/CoinXu/blog/master/docker/shared-volume.jpg)
 
 数据卷位于Docker主机本地存储区域之外，进一步增强了与存储驱动控制的独立性。当一个容器被删除时，
 任何存储在数据卷中的数据仍然存在于Docker主机上。

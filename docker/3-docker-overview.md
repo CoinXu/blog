@@ -25,7 +25,7 @@ Docker 引擎是一个客户端-服务端应用，提供以下主要部件：
 + 一个指定的RSET API接口用于与守护进程通信并指示守护进程做什么
 + 一个命令行客户端(CLI)
 
-![engine-components-flow.png](./engine-components-flow.png)
+![engine-components-flow.png](https://raw.githubusercontent.com/CoinXu/blog/master/docker/engine-components-flow.png)
 
 CLI使用REST API通过脚本或直接使用CLI命令控制Docker或与Docker通信。
 许多其他Docker应用程序都使用这个底层的API和命令。
@@ -43,7 +43,7 @@ CLI使用REST API通过脚本或直接使用CLI命令控制Docker或与Docker通
 Docker使用客户端-服务端架构。Docker客户端与守护进程通信。Docker客户端与守护进程可以运行在同一系统上。
 你也可以连接一个远程Docker守护进程。Docker客户端使用UNIX sockets或者网络接口通过REST API与守护进程通信。
 
-![architecture.svg](./architecture.svg)
+![architecture.svg](https://raw.githubusercontent.com/CoinXu/blog/master/docker/architecture.svg)
 
 ### Docker 守护进程
 Docker 守护进程监听Docker API请求，管理Docker对象，如：镜像、容器、网络和数组卷。
