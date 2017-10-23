@@ -143,7 +143,7 @@ def=hello，而不是bye。然而ghi=bye，因为他与abc=bye不在同一条指
 # .dockerignore file
 
 在docker CLI发送context到docker守护进程之前，docker CLI将会寻找context根目录下一个名为`.dockerignore`的文件。
-如果该文件存丰，docker CLI将会修改context，使其排除该文件中匹配的文件目录。
+如果该文件存在，docker CLI将会修改context，使其排除该文件中匹配的文件目录。
 这有助于避免将不必要的大的、敏感的文件或目录发送到守护进程，也能避免用户通过`ADD`或`COPY`命令将这些文件或目录添加到镜像。
 
 CLI将.dockerignore文件解析为以换行符作为分割符的匹配模式列表，context的根目录将会作为.dockerignore中所有匹配的根目录。
@@ -170,9 +170,6 @@ temp?
 
 除了Go的filepath.Match规则之外，Docker还支持一个特殊的通配符`**`，用来匹配任意数量的目录，包括没有目录(including zero)。
 比如`**/*.go`将会排除context根目录下所以有`.go`结尾的文件。
-
-Lines starting with ! (exclamation mark) can be used to make exceptions to exclusions.
-The following is an example .dockerignore file that uses this mechanism:
 
 一行以!（感叹号）开头可以用来标识例外的情况，下面是一个使用该机制的例子：
 ```
@@ -226,11 +223,11 @@ FROM <image>[@<digest>] [AS <name>]
 + `FROM`可以在一个Dockerfile中出现多次创建多个镜像，或者使用一个构建阶段(build stage)作为其他构建的依赖。
   Simply make a note of the last image ID output by the commit before each new FROM instruction.
   （这句翻译不通...TODO）
-+ 通过可选参数name，可以使用`AS name`给`FROM`指令一个新的构建阶段。该name可以用在接下来的`FROM`和`COPY --from=<name|index>`指令在该构建阶段中构建新的镜像。
++ 可选参数name，可以使用`AS name`给`FROM`指令一个新的构建阶段。该name可以用在接下来的`FROM`和`COPY --from=<name|index>`指令在该构建阶段中构建新的镜像。
 + `tag`或`digest`是可选的，如果你忽略二者之一，构建器默认分配`latest`，如果构建器找不到`tag`值，将会返回一个错误。
 
 # ARG与FROM的相互影响
-`FROM`指令支持`ARG`指令在第一个`FROM`之前声明的变量。
+`FROM`指令支持在第一个`FROM`指令前使用`ARG`指令声明的变量。
 ```bash
 ARG  CODE_VERSION=latest
 FROM base:${CODE_VERSION}
