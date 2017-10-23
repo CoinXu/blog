@@ -145,7 +145,7 @@ def=hello，而不是bye。然而ghi=bye，因为他与abc=bye不在同一条指
 在docker CLI发送context到docker守护进程之前，docker CLI将会寻找context根目录下一个名为`.dockerignore`的文件。
 如果该文件存丰，docker CLI将会修改context，使其排除该文件中匹配的文件目录。
 这有助于避免将不必要的大的、敏感的文件或目录发送到守护进程，也能避免用户通过`ADD`或`COPY`命令将这些文件或目录添加到镜像。
-  
+
 CLI将.dockerignore文件解析为以换行符作为分割符的匹配模式列表，context的根目录将会作为.dockerignore中所有匹配的根目录。
 比如，模式`/foo/bar`与`foo/bar`都会排除`PATH`或本地git仓库根目录下`foo`子目录中名为`bar`的文件或目录。
 
@@ -158,24 +158,20 @@ CLI将.dockerignore文件解析为以换行符作为分割符的匹配模式列�
 */*/temp*
 temp?
 ```
-|     Rule       | Behavior   | 
+|     Rule       | Behavior   |
 | -------------- | ------     |
-| # comment      | 注释、忽略 |
+| # comment      | 注释、忽略  |
 | */temp*        | 排除根目录中的`直接`子目录中任何以`temp`开头的文件或目录，比如文件`/somedir/temporary.txt`、目录`/somedir/temp` |
 | */*/temp*      | 排除根目录中的`二级`子目录内的以`temp`开头的文件或目录，比如 `/somedir/subdir/temporary.txt` |
 | temp?          | 排除根目录中名称为`temp`后跟一个字符的文件或目录，比如`/tempa`或`/tempb` |
 
-
-Matching is done using Go’s filepath.Match rules. A preprocessing step removes leading and trailing whitespace and eliminates
- . and .. elements using Go’s filepath.Clean. Lines that are blank after preprocessing are ignored.
- 
 匹配使用Go的[filepath.Match](http://golang.org/pkg/path/filepath#Match)规则，预处理步骤中将会删除开头与结尾的空白符，
 使用[filepath.Clean](http://golang.org/pkg/path/filepath/#Clean)清除`.`与`..`元素元素。预处理后的空白行将会被忽略。
 
 除了Go的filepath.Match规则之外，Docker还支持一个特殊的通配符`**`，用来匹配任意数量的目录，包括没有目录(including zero)。
 比如`**/*.go`将会排除context根目录下所以有`.go`结尾的文件。
 
-Lines starting with ! (exclamation mark) can be used to make exceptions to exclusions. 
+Lines starting with ! (exclamation mark) can be used to make exceptions to exclusions.
 The following is an example .dockerignore file that uses this mechanism:
 
 一行以!（感叹号）开头可以用来标识例外的情况，下面是一个使用该机制的例子：
@@ -185,7 +181,69 @@ The following is an example .dockerignore file that uses this mechanism:
 ```
 排除除了`README.md`之外的所有`md`文件。
 
-The placement of ! exception rules influences the behavior: the last line of the 
-.dockerignore that matches a particular file determines whether it is included or excluded. Consider the following example:
+!符号位置的影响行为：.dockerignore最后一行匹配决定一文件或目录是包含还是排除。考虑如下情况：
+```
+*.md
+!README*.md
+README-secret.md
+```
+不包含任何markdown文件，除了`README`之外，而且要排除`README-secret.md`。
 
-!符号不同位置的影响：
+现在考虑如下情况：
+```
+*.md
+README-secret.md
+!README*.md
+```
+所有的`README`文件将会被包含进来，中间这行没有起效，因为`!README*.md`也匹配了`README-secred.md`，并且还是在最后匹配的。
+
+你甚至可以使用.dockerignore排除Dockerfile和.dockerignore文件。
+但是这些文件依然会被发送到守护进程，因为需要它们来完成任务，但`ADD`与`COPY`指令将不会复制它们到镜像。
+
+最后，你可能希望能够指定哪些文件可以包含进来，而不是排除哪些文件。
+为了达到这个目的，你可以指定`*`作为第一个匹配模式，然后再使用一个或多个`!`感叹号模式。
+
+__注:__ 历史原因，`.`匹配模式已被忽略。
+
+# FROM
+```bash
+FROM <image> [AS <name>]
+```
+或
+```bash
+FROM <image>[:<tag>] [AS <name>]
+```
+或
+```bash
+FROM <image>[@<digest>] [AS <name>]
+```
+
+`FROM`指令初始化一个新的构建阶段并且为接下来的指令设置一个基础镜像。
+一个合法的Dockerfile必须以一个`FROM`指令开始。image参数可以是任意合法的镜像，
+可以非常容易的从[公开仓库](https://docs.docker.com/engine/tutorials/dockerrepos/)中得到。
+
++ `ARG`是Dockerfile中唯一可能出现在`FROM`之前的指令，见[ARG与FROM的相互影响](#ARG与FROM的相互影响)
++ `FROM`可以在一个Dockerfile中出现多次创建多个镜像，或者使用一个构建阶段(build stage)作为其他构建的依赖。
+  Simply make a note of the last image ID output by the commit before each new FROM instruction.
+  （这句翻译不通...TODO）
++ 通过可选参数name，可以使用`AS name`给`FROM`指令一个新的构建阶段。该name可以用在接下来的`FROM`和`COPY --from=<name|index>`指令在该构建阶段中构建新的镜像。
++ `tag`或`digest`是可选的，如果你忽略二者之一，构建器默认分配`latest`，如果构建器找不到`tag`值，将会返回一个错误。
+
+# ARG与FROM的相互影响
+`FROM`指令支持`ARG`指令在第一个`FROM`之前声明的变量。
+```bash
+ARG  CODE_VERSION=latest
+FROM base:${CODE_VERSION}
+CMD  /code/run-app
+
+FROM extras:${CODE_VERSION}
+CMD  /code/run-extras
+```
+在`FROM`之前的`ARG`声明在构建阶段之外，所以不能在任何`FROM`之后的指令中使用。
+若要使用第一个`FROM`指令前`ARG`指令声明的默认值，可以在构建阶段使用`ARG`指令声明变量，但不要赋值：
+```bash
+ARG VERSION=latest
+FROM busybox:$VERSION
+ARG VERSION
+RUN echo $VERSION > image_version
+```
