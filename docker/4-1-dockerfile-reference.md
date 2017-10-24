@@ -220,9 +220,14 @@ FROM <image>[@<digest>] [AS <name>]
 可以非常容易的从[公开仓库](https://docs.docker.com/engine/tutorials/dockerrepos/)中得到。
 
 + `ARG`是Dockerfile中唯一可能出现在`FROM`之前的指令，见[ARG与FROM的相互影响](#ARG与FROM的相互影响)
-+ `FROM`可以在一个Dockerfile中出现多次创建多个镜像，或者使用一个构建阶段(build stage)作为其他构建的依赖。
-  Simply make a note of the last image ID output by the commit before each new FROM instruction.
-  （这句翻译不通...TODO）
+
+FROM可以在单个Docker文件中多次出现以创建多个图像，或者使用一个构建阶段作为另一个的依赖。
+在每个新的FROM指令之前，简单地记录通过提交输出的最后一个图像ID。每个FROM指令清除由先前指令创建的任何状态。
+
++ `FROM`可以在一个Dockerfile中出现多次来创建多个镜像，或者使用一个构建阶段(build stage)作为其他构建的依赖。
+  在每个新的`FROM`指令之前，简单地记录通过提交输出的最后一个镜像的ID。(译注：这句话不知道是什么意思，译者只是按原句语义翻译。
+  Simply make a note of the last image ID output by the commit before each new FROM instruction.)
+  每个`FROM`指令将会清除之前指令创建的所有状态。
 + 可选参数name，可以使用`AS name`给`FROM`指令一个新的构建阶段。该name可以用在接下来的`FROM`和`COPY --from=<name|index>`指令在该构建阶段中构建新的镜像。
 + `tag`或`digest`是可选的，如果你忽略二者之一，构建器默认分配`latest`，如果构建器找不到`tag`值，将会返回一个错误。
 
