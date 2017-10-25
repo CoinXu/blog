@@ -299,16 +299,6 @@ RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
 
 `RUN`指令的缓存可以通途`ADD`指令使其无效，[详见](https://docs.docker.com/engine/reference/builder/#add)
 
-Known issues (RUN)
-Issue 783 is about file permissions problems that can occur when using the AUFS file system. 
-You might notice it during an attempt to rm a file, for example.
-
-For systems that have recent aufs version (i.e., dirperm1 mount option can be set), 
-docker will attempt to fix the issue automatically by mounting the layers with dirperm1 option. 
-More details on dirperm1 option can be found at aufs man page
-
-If your system doesn’t have support for dirperm1, the issue describes a workaround.
-
 ## 已知问题(RUN)
 [Issue 783](https://github.com/docker/docker/issues/783)
 是关于文件权限的问题，可能在AUFS文件系统上出现。你可能会在尝试删除一个文件的时候收到该提示。
