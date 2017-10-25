@@ -344,3 +344,56 @@ CMD ["/usr/bin/wc","--help"]
 > __注：__ 不要混淆`RUN`和`CMD`。`RUN`实际上是运行命令并提交结果，`CMD`在构建是不会执行任何指令，
   只是为镜像提供预备(intended)(译注：相当于默认的意思吧，就是如果在`docker run`中没有提供参数，就使用`CMD`提供的了)的命令。
 
+# LABEL
+```dockerfile
+LABEL <key>=<value> <key>=<value> <key>=<value> ...
+```
+`LABEL`指令添加元数据到一个镜像中(metadata)，一个`LABEL`为一个key-value对，其值与`LABEL`用空格隔开。
+可以像命令中一样使用引号和反斜杆。下面是一些使用例子：
+```dockerfile
+LABEL "com.example.vendor"="ACME Incorporated"
+LABEL com.example.label-with-value="foo"
+LABEL version="1.0"
+LABEL description="This text illustrates \
+that label-values can span multiple lines."
+```
+一个镜像可以有多个`LABEL`，Docker推荐尽可能使用单个`LABEL`指令组合所有的值。
+每个`LABEL`会产生一个新的层，从而导致镜像效率低下。下面的例子的结果将会作为镜像的单个层：
+```dockerfile
+LABEL multi.label1="value1" multi.label2="value2" other="value3"
+```
+上面的例子也可以写成：
+```dockerfile
+LABEL multi.label1="value1" \
+      multi.label2="value2" \
+      other="value3"
+```
+标签附加在`FROM`提供的镜像里，如果Docker遇到标签的键与已存在的键相冲突的情况，新的值将会覆盖原来键所属的值。
+使用`docker inspect`可以显示一个镜像的标签：
+```dockerfile
+"Labels": {
+    "com.example.vendor": "ACME Incorporated"
+    "com.example.label-with-value": "foo",
+    "version": "1.0",
+    "description": "This text illustrates that label-values can span multiple lines.",
+    "multi.label1": "value1",
+    "multi.label2": "value2",
+    "other": "value3"
+},
+```
+
+# MAINTAINER (已废弃)
+
+# EXPOSE
+```dockerfile
+EXPOSE <port> [<port>/<protocol>...]
+```
+`EXPOSE`指令告诉Docker容器运行时监听的网络端口。你可以指定TCP或UDT的端口，如果没有指定通信协议，默认为TCP端口。
+
+`EXPOSE`指令并非真正的开放端口。它的功能是为在构建镜像和使用镜像人的之间创建一个关于哪个端口作为预设的开放端口的描述。
+真正开放端口是在运行容器的时候，在`docker run`时使用`-p`标记指定开放与映射一个或多个端口，
+或者使用`-P`开放所有已设置的端口并将其映射到高级别(high-order)端口。
+
+在主机系统上设置端口重定向，参考[使用-P标记](https://docs.docker.com/engine/reference/run/#expose-incoming-ports)。
+`docker network`命令支持创建一个网络，容器可以不暴露或发布指定端口而使用该网络通信，因为容器联结到该网络可以与任意其他端口通信。
+详细信息[该特性概览](https://docs.docker.com/engine/userguide/networking/)
