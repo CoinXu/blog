@@ -286,7 +286,7 @@ RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
   当你使用执行形式或直接执行shell，与shell形式一样，是由正在执行环境变量扩展的shell在处理，而不是docker。
 
 > __注:__
-  在JSON形式下，必需庄转义反斜线，尤其是在将反斜线作为路径分隔符的windows上。
+  在JSON形式下，必需转义反斜线，尤其是在将反斜线作为路径分隔符的windows上。
   如：`["c:\windows\system32\tasklist.exe"]`将会被视为shell形式，因为它不是合法的JSON。
   正确的语法应为：`["c:\\windows\\system32\\tasklist.exe"]
   
@@ -301,7 +301,7 @@ RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
 
 ## 已知问题(RUN)
 [Issue 783](https://github.com/docker/docker/issues/783)
-是关于文件权限的问题，可能在AUFS文件系统上出现。你可能会在尝试删除一个文件的时候收到该提示。
+是关于文件权限的问题，可能在AUFS文件系统上出现。在你尝试删除一个文件的时候可能会收到该提示。
 
 如果系统为最近的aufs版本（可以设置`dirperm`挂载配置），Docker将会尝试通过使用`dirperm`选择挂载该层来自动修复这个问题。
 `dirperm1`选择的详细信息可以在aufs[主页](https://github.com/sfjro/aufs3-linux/tree/aufs3.18/Documentation/filesystems/aufs)找到。
