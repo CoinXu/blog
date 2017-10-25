@@ -278,18 +278,18 @@ RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
 
 > __注:__
   执行形式将会被转成JSON数据，这意味着你必须使用双引号（"）来包裹一个词，而不是单引号（')。
-  
+
 > __注:__
-  与shell形式不同，执行形式不会调用shell命令，不会执行普通的shell处理程序。
+  与shell形式不同，执行形式不会调用shell命令，不会执行正常的shell处理程序。
   比如执行`RUN ["echo", "$HOME"]`，$HOME并不会发生变量替换。
-  如果你希望shell处理程序执行，那可使用shell形式或直接执行一个shell，如`RUN [ "sh", "-c", "echo $HOME" ]`。
+  如果你希望shell处理程序执行，可使用shell形式或直接执行一个shell，如`RUN [ "sh", "-c", "echo $HOME" ]`。
   当你使用执行形式或直接执行shell，与shell形式一样，是由正在执行环境变量扩展的shell在处理，而不是docker。
 
 > __注:__
   在JSON形式下，必需转义反斜线，尤其是在将反斜线作为路径分隔符的windows上。
   如：`["c:\windows\system32\tasklist.exe"]`将会被视为shell形式，因为它不是合法的JSON。
   正确的语法应为：`["c:\\windows\\system32\\tasklist.exe"]
-  
+
 
 `RUN`指令的缓存不会自动清理，将会用于下一次构建。
 如运行`RUN apt-get dist-upgrade -y`的缓存在一次的构建时将会被使用。
@@ -309,4 +309,38 @@ RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
 如果你的系统不支持`dirperm1`，该issue提供了一个解决方案。
 
 # CMD
-  
+`CMD`指令有三种使用形式
++ `CMD ["executable","param1","param2"]` 执行形式，也是首选形式
++ `CMD ["param1","param2"]` 作为入口点(`ENTRYPOINT`)的默认参数
++ `CMD command param1 param2` shell命令形式
+
+一个Dockerfile中只能出现一次`CMD`指令，如果出现多次，只有最后一次出现的起作用。
+
+`CMD`一个主要目的是为一个执行容器提供默认值，该值可以包含可执程序，也可以省略，如果省略了，你需要指一个`ENTRYPOINT`指令。
+
+> __注：__ 如果`CMD`用来为`ENTRYPOINT`指令提供默认参数，`CMD`与`ENTRYPOINT`指令都要符合JSON数组格式。
+> __注：__ 执行形式将会解析为JSON格式数组，所以你必须使双引号来包裹语句，而非单引号。
+> __注：__ 与shell形式不同，执行形式不会调用shell程序，不会发生正常的shell程序处理。
+  如`CMD ["echo", "$HOME"]`不会在`$HOME`上发生变量替换。如果你希望shell处理程序生效，你可以使用shell形式或直接执行shell程序。
+  如`CMD ["sh", "-c", "echo $HOME"]`，当你使用执行形式或直接执行shell，与shell形式一样，是由正在执行环境变量扩展的shell在处理，而不是docker。
+
+shell格式与可执行形式的`CMD`指令设置的命令将会在镜像运行是执行。
+
+如果你使用了shell形式的`CMD`指令，其`<command>`部份将会运行在`/bin/sh -c`中：
+```dockerfile
+FROM ubuntu
+CMD echo "This is a test." | wc -
+```
+如果你不想在shell中运行你的`<command>`，你必须使用JSON数组格式定义命令，并且为可执行程序给定完整的路径。
+数组形式是`CMD`首选形式，所有的附加参数必须独立的以字符串形式置于数组中。
+```dockerfile
+FROM ubuntu
+CMD ["/usr/bin/wc","--help"]
+```
+如果你希望容器每次执行同样的程序，那么你应该考虑`ENTRYPOINT`与`CMD`结合使用，详见[ENTRYPOINT](https://docs.docker.com/engine/reference/builder/#entrypoint)
+
+如果用户在运行`docker run`命令时指定了参数，将会覆盖默认的`CMD`指令。
+
+> __注：__ 不要混淆`RUN`和`CMD`。`RUN`实际上是运行命令并提交结果，`CMD`在构建是不会执行任何指令，
+  只是为镜像提供预备(intended)(译注：相当于默认的意思吧，就是如果在`docker run`中没有提供参数，就使用`CMD`提供的了)的命令。
+
