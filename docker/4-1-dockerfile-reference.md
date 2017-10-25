@@ -40,7 +40,7 @@ $ docker build -t shykes/myapp .
 ```
 要在构建成功后将镜像票房到多个存储库中，可以添加多个`-t`标识
 ```bash
-$docker build -t shykes/myapp:1.0.2 -t shykes/myapp:laest .
+$ docker build -t shykes/myapp:1.0.2 -t shykes/myapp:laest .
 ```
 
 Docker守护进程在运行Dockerfile指令之前，会对指令作为一个初步检查，如果有语法不正确将会返回一个错误：
@@ -203,15 +203,15 @@ README-secret.md
 __注:__ 历史原因，`.`匹配模式已被忽略。
 
 # FROM
-```bash
+```dockerfile
 FROM <image> [AS <name>]
 ```
 或
-```bash
+```dockerfile
 FROM <image>[:<tag>] [AS <name>]
 ```
 或
-```bash
+```dockerfile
 FROM <image>[@<digest>] [AS <name>]
 ```
 
@@ -233,7 +233,7 @@ FROM可以在单个Docker文件中多次出现以创建多个图像，或者使�
 
 # ARG与FROM的相互影响
 `FROM`指令支持在第一个`FROM`指令前使用`ARG`指令声明的变量。
-```bash
+```dockerfile
 ARG  CODE_VERSION=latest
 FROM base:${CODE_VERSION}
 CMD  /code/run-app
@@ -243,9 +243,80 @@ CMD  /code/run-extras
 ```
 在`FROM`之前的`ARG`声明在构建阶段之外，所以不能在任何`FROM`之后的指令中使用。
 若要使用第一个`FROM`指令前`ARG`指令声明的默认值，可以在构建阶段使用`ARG`指令声明变量，但不要赋值：
-```bash
+```dockerfile
 ARG VERSION=latest
 FROM busybox:$VERSION
 ARG VERSION
 RUN echo $VERSION > image_version
 ```
+
+# RUN
+`RUN`有两种形式：
++ `RUN <command>` ： shell形式，命令在shell中运行，在Linux中为`/bin/sh -c`，Window中为`cmd /S /C`
++ `RUN ["executable", "param1", "param2"]`：执行形式
+
+`RUN`指令将在当前镜像最上层创建一个新的层来执行并提交执行结果，该接果将会用于Dockerfile后续的步骤。
+
+分层执行`RUN`指令并提交结果，符合Docker的核概念，提交变更成本很低，容器可以从镜像的任意层创建。
+
+执行形式可以避免shell脚本字符被修改，还可以在一个没有指定shell运行环境的基础镜像中执行命令。
+
+shell形式的默认shell可以通过`SHELL`命令修改。
+在shell形式下可以使用一个\(反斜线)来连接位位于多行的一条指令。如：
+```dockerfile
+RUN /bin/bash -c 'source $HOME/.bashrc; \
+echo $HOME'
+```
+等同于
+```dockerfile
+RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
+```
+
+> __注:__
+  如果不使用`/bin/sh`而想使用其他的shell来运行命令，可以使用执行形式指定一个shell。
+  比如：`RUN ["/bin/bash", "-c", "echo hello"]
+
+> __注:__
+  执行形式将会被转成JSON数据，这意味着你必须使用双引号（"）来包裹一个词，而不是单引号（')。
+  
+> __注:__
+  与shell形式不同，执行形式不会调用shell命令，不会执行普通的shell处理程序。
+  比如执行`RUN ["echo", "$HOME"]`，$HOME并不会发生变量替换。
+  如果你希望shell处理程序执行，那可使用shell形式或直接执行一个shell，如`RUN [ "sh", "-c", "echo $HOME" ]`。
+  当你使用执行形式或直接执行shell，与shell形式一样，是由正在执行环境变量扩展的shell在处理，而不是docker。
+
+> __注:__
+  在JSON形式下，必需庄转义反斜线，尤其是在将反斜线作为路径分隔符的windows上。
+  如：`["c:\windows\system32\tasklist.exe"]`将会被视为shell形式，因为它不是合法的JSON。
+  正确的语法应为：`["c:\\windows\\system32\\tasklist.exe"]
+  
+
+`RUN`指令的缓存不会自动清理，将会用于下一次构建。
+如运行`RUN apt-get dist-upgrade -y`的缓存在一次的构建时将会被使用。
+但可以通过`--no-cache`标识使`RUN`指令的缓存失效，如`docker build --no-cache`。
+
+更多信息见Dockerfile [最佳实践指南](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#/build-cache)。
+
+`RUN`指令的缓存可以通途`ADD`指令使其无效，[详见](https://docs.docker.com/engine/reference/builder/#add)
+
+Known issues (RUN)
+Issue 783 is about file permissions problems that can occur when using the AUFS file system. 
+You might notice it during an attempt to rm a file, for example.
+
+For systems that have recent aufs version (i.e., dirperm1 mount option can be set), 
+docker will attempt to fix the issue automatically by mounting the layers with dirperm1 option. 
+More details on dirperm1 option can be found at aufs man page
+
+If your system doesn’t have support for dirperm1, the issue describes a workaround.
+
+## 已知问题(RUN)
+[Issue 783](https://github.com/docker/docker/issues/783)
+是关于文件权限的问题，可能在AUFS文件系统上出现。你可能会在尝试删除一个文件的时候收到该提示。
+
+如果系统为最近的aufs版本（可以设置`dirperm`挂载配置），Docker将会尝试通过使用`dirperm`选择挂载该层来自动修复这个问题。
+`dirperm1`选择的详细信息可以在aufs[主页](https://github.com/sfjro/aufs3-linux/tree/aufs3.18/Documentation/filesystems/aufs)找到。
+
+如果你的系统不支持`dirperm1`，该issue提供了一个解决方案。
+
+# CMD
+  
