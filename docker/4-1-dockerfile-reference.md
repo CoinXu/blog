@@ -397,3 +397,56 @@ EXPOSE <port> [<port>/<protocol>...]
 在主机系统上设置端口重定向，参考[使用-P标记](https://docs.docker.com/engine/reference/run/#expose-incoming-ports)。
 `docker network`命令支持创建一个网络，容器可以不暴露或发布指定端口而使用该网络通信，因为容器联结到该网络可以与任意其他端口通信。
 详细信息[该特性概览](https://docs.docker.com/engine/userguide/networking/)
+
+# ENV
+[Dockerfile`ENT`指令介绍](https://docs.docker.com/engine/reference/builder/#env)
+
+为了使用新的软件更容易运行，可以使用`ENV`为容器中的软件更新`PATH`环境变量，
+比如`ENV PATH /usr/local/nginx/bin:$PATH`可以确保`CMD ["nginx"]`正确运行。
+
+`ENV`指令在为服务指供必要的环境变量时也非常有用，比如Postgres的`PGDATA`。
+
+`ENV`也可以用来设置公共的版本号，使得维护版本号变得非常容易：
+```dockerfile
+ENV PG_MAJOR 9.3
+ENV PG_VERSION 9.3.4
+RUN curl -SL http://example.com/postgres-$PG_VERSION.tar.xz | tar -xJC /usr/src/postgress && …
+ENV PATH /usr/local/postgres-$PG_MAJOR/bin:$PATH
+```
+类似于程序中的常量（不是硬编码），该方法可以让你通过变更一个`ENV`指令而达到自动变容器中的软件的目的。
+
+# ADD or COPY
+[ADD指令介绍](https://docs.docker.com/engine/reference/builder/#add)
+[COPY指令介绍](https://docs.docker.com/engine/reference/builder/#copy)
+
+虽然`ADD`与`COPY`功能类似，但通常而言，`COPY`是首选，因为它比`ADD`更透明(transparent)。
+`COPY`只支持本地文件到容器的基本复制功能，而`ADD`有一些隐含的特性（如本地tar文件提取、远程URL支持）。
+所以`ADD`的最佳使用方法是将本地文件自动提取到镜像，如：`ADD rootfs.tar.xz /.`。
+
+如果Dockerfile中有多个步骤需要使用不同的文件，对每个文件使用`COPY`指令比次复制所有的方法要好。
+如果特别的指明了需要依赖文件变化，这将确保每个步骤的构建缓存失效(is only invalidated. 译注：是指即时清除缓存吗？)
+```dockerfile
+COPY requirements.txt /tmp/
+RUN pip install --requirement /tmp/requirements.txt
+COPY . /tmp/
+```
+如果你将`COPY ./tmp/`放在`RUN`之前，会导致`RUN`步骤的缓存失效数减少。
+(Results in fewer cache invalidations for the RUN step, than if you put the COPY . /tmp/ before it. 译注：说不太明白)
+
+基于图形大小的考量，强烈建议不要使用`ADD`从远程`URL`上拉取安装包，而应使用`curl`或`wget`代替。
+这样你可以删除在解压后不再需要的文件，而不必在镜像中再创建一层。比如，你应该避免如下的方式：
+```dockerfile
+ADD http://example.com/big.tar.xz /usr/src/things/
+RUN tar -xJf /usr/src/things/big.tar.xz -C /usr/src/things
+RUN make -C /usr/src/things all
+```
+而是如此：
+```dockerfile
+RUN mkdir -p /usr/src/things \
+    && curl -SL http://example.com/big.tar.xz \
+    | tar -xJC /usr/src/things \
+    && make -C /usr/src/things all
+```
+对于其他不需要的自动提取功能的项（文件、目录），你应该始终使用`COPY`。
+
+# ENTRYPOINT
