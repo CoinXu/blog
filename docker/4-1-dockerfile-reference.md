@@ -318,9 +318,12 @@ RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
 
 `CMD`一个主要目的是为一个执行容器提供默认值，该值可以包含可执程序，也可以省略，如果省略了，你需要指一个`ENTRYPOINT`指令。
 
-> __注：__ 如果`CMD`用来为`ENTRYPOINT`指令提供默认参数，`CMD`与`ENTRYPOINT`指令都要符合JSON数组格式。
-> __注：__ 执行形式将会解析为JSON格式数组，所以你必须使双引号来包裹语句，而非单引号。
-> __注：__ 与shell形式不同，执行形式不会调用shell程序，不会发生正常的shell程序处理。
+> __注:__ 如果`CMD`用来为`ENTRYPOINT`指令提供默认参数，`CMD`与`ENTRYPOINT`指令都要符合JSON数组格式。
+
+> __注:__ 执行形式将会解析为JSON格式数组，所以你必须使双引号来包裹语句，而非单引号。
+
+> __注:__
+  与shell形式不同，执行形式不会调用shell程序，不会发生正常的shell程序处理。
   如`CMD ["echo", "$HOME"]`不会在`$HOME`上发生变量替换。如果你希望shell处理程序生效，你可以使用shell形式或直接执行shell程序。
   如`CMD ["sh", "-c", "echo $HOME"]`，当你使用执行形式或直接执行shell，与shell形式一样，是由正在执行环境变量扩展的shell在处理，而不是docker。
 
@@ -450,3 +453,120 @@ RUN mkdir -p /usr/src/things \
 对于其他不需要的自动提取功能的项（文件、目录），你应该始终使用`COPY`。
 
 # ENTRYPOINT
+
+ENTRYPOINT 有两种形式：
++ `ENTRYPOINT ["executable", "param1", "param2"]` (执行形式，首选)
++ `ENTRYPOINT command param1 param2 (shell form)` (shell 形式)
+
+`ENTRYPOIN`允许你配置容器以何种方式运行，下面例子将使用使用nginx的默认内容启动，并监听80端口：
+```dockerfile
+docker run -i -t --rm -p 80:80 nginx
+```
+`docker run <image>`命令行参数将会全部追加到执行形式的`ENTRYPOINT`后，并会覆写`CMD`指令指定的所有元素。
+这允许参数传递到入口点(entry point)，如`docker run <image> -d`将会把`-d`参数传递到入口点。
+你可以通过`docker run --entrypoint`标记覆写`ENTRYPOINT`指令。
+
+shell形式阻止任何`CMD`与`run`命令行参数，这种方式有一个缺点：`ENTRYPOINT`将会作为`/bin/sh -c`的子命令运行，因而不会传入信号。
+这意味着执行程序不会成为容器的`PID 1`，不能收到Unix信号，因而你的执行程序不会收到`docker stop <container>`的终止信号`SIGTERM`。
+
+在Dockerfile中，只有最后一个`ENTRYPOINT`指令才会生效。
+
+### 执行形式 ENTRYPOINT 示例
+你可以使用`ENTRYPOINT`的执行形式设置稳定的默认命令与参数，然后使用`CMD`两种形式之一设置可变参数的默认值。
+```dockerfile
+FROM ubuntu
+ENTRYPOINT ["top", "-b"]
+CMD ["-c"]
+```
+运行容器时将会看到`top`是唯一的进程：
+```bash
+$ docker run -it --rm --name test  top -H
+top - 08:25:00 up  7:27,  0 users,  load average: 0.00, 0.01, 0.05
+Threads:   1 total,   1 running,   0 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.1 us,  0.1 sy,  0.0 ni, 99.7 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+KiB Mem:   2056668 total,  1616832 used,   439836 free,    99352 buffers
+KiB Swap:  1441840 total,        0 used,  1441840 free.  1324440 cached Mem
+
+  PID USER      PR  NI    VIRT    RES    SHR S %CPU %MEM     TIME+ COMMAND
+    1 root      20   0   19744   2336   2080 R  0.0  0.1   0:00.04 top
+```
+可以使用`docker exec`查看更多结果：
+```bash
+$ docker exec -it test ps aux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  2.6  0.1  19752  2352 ?        Ss+  08:24   0:00 top -b -H
+root         7  0.0  0.1  15572  2164 ?        R+   08:25   0:00 ps aux
+```
+你可以使用`docker stop test`优雅的停止`top`进程。
+
+下面Dockerfile展示了使用`ENTRYPOINT`使用`FOREGROUND`运行Apache。
+```dockerfile
+FROM debian:stable
+RUN apt-get update && apt-get install -y --force-yes apache2
+EXPOSE 80 443
+VOLUME ["/var/www", "/var/log/apache2", "/etc/apache2"]
+ENTRYPOINT ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+```
+
+如果你需要为某个可执行程序书写一个启动器，你需要确保最终执行程序能接收从`exec`与`gosu`命令发出Unix信号：
+```bash
+#!/usr/bin/env bash
+set -e
+
+if [ "$1" = 'postgres' ]; then
+    chown -R postgres "$PGDATA"
+
+    if [ -z "$(ls -A "$PGDATA")" ]; then
+        gosu postgres initdb
+    fi
+
+    exec gosu postgres "$@"
+fi
+
+exec "$@"
+```
+
+如果你需要在停止的时候做一些特别的清理（或与其他容器通信），或是协调多个执行程序，你可能需要确保`ENTRYPOINT`脚本能接收Unix信号，
+通过他们做一些事情：
+```bash
+#!/bin/sh
+# 注：该脚本使用sh书写，所以也可以运行在busybox容器中
+
+# 如果服务停止后你还需要手动做一些清理工作，请使用trap命令。
+# 或者需要在一个容器中启动多个服务
+trap "echo TRAPed signal" HUP INT QUIT TERM
+
+# 启动一个服务在后台运行
+/usr/sbin/apachectl start
+
+echo "[hit enter key to exit] or run 'docker stop <container>'"
+read
+
+# 停止服务并清理
+echo "stopping apache"
+/usr/sbin/apachectl stop
+
+echo "exited $0"
+```
+如果使用`docker run -it --rm -p 80:80 --name test apache`运行该镜像，可以使用`docker exec`查看容器进程，
+或使用`docker stop`后要求脚本停止Apache:
+```bash
+$ docker exec -it test ps aux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.1  0.0   4448   692 ?        Ss+  00:42   0:00 /bin/sh /run.sh 123 cmd cmd2
+root        19  0.0  0.2  71304  4440 ?        Ss   00:42   0:00 /usr/sbin/apache2 -k start
+www-data    20  0.2  0.2 360468  6004 ?        Sl   00:42   0:00 /usr/sbin/apache2 -k start
+www-data    21  0.2  0.2 360468  6000 ?        Sl   00:42   0:00 /usr/sbin/apache2 -k start
+root        81  0.0  0.1  15572  2140 ?        R+   00:44   0:00 ps aux
+$ docker top test
+PID                 USER                COMMAND
+10035               root                {run.sh} /bin/sh /run.sh 123 cmd cmd2
+10054               root                /usr/sbin/apache2 -k start
+10055               33                  /usr/sbin/apache2 -k start
+10056               33                  /usr/sbin/apache2 -k start
+$ /usr/bin/time docker stop test
+test
+real	0m 0.27s
+user	0m 0.03s
+sys	0m 0.03s
+```
