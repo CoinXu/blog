@@ -570,3 +570,86 @@ real	0m 0.27s
 user	0m 0.03s
 sys	0m 0.03s
 ```
+
+> 注：可以使用`--entrypoint`覆写`ENTRYPOINT`配置，但是只能设置执行的二态(binary，译注：不理解)。
+
+> 注：执行形式将会解析为JSON数组，所以命令需要包在双引号内，单引号不行。
+
+> 注：与shell形式不同，执行形式不会调用shell程序，不会发生正常的shell程序处理。
+  如`ENTRYPOINT [ "echo", "$HOME" ]`不会在`$HOME`上发生变量替换。如果你希望shell处理程序生效，你可以使用shell形式或直接执行shell程序。
+  如`ENTRYPOINT [ "sh", "-c", "echo $HOME" ]`，当你使用执行形式或直接执行shell，与shell形式一样，是由正在执行环境变量扩展的shell在处理，而不是docker。
+
+### shell形式`ENTRYPOINT`例子
+你可以为`ENTRYPOINT`指定一个纯字符串作为其值，这将会运行在`/bin/sh -c`中。shell形式使用shell程序替换shell环境变量，
+并且会忽略所有`CMD`与`docker run`命令行参数。为了确保`docker stop`能正确的发送信号给长时间运行的程序，你需要使用`exec`启动程序：
+```dockerfile
+FROM ubuntu
+ENTRYPOINT exec top -b
+```
+运行后你可以看到一个`PID1`进程：
+```bash
+$ docker run -it --rm --name test top
+Mem: 1704520K used, 352148K free, 0K shrd, 0K buff, 140368121167873K cached
+CPU:   5% usr   0% sys   0% nic  94% idle   0% io   0% irq   0% sirq
+Load average: 0.08 0.03 0.05 2/98 6
+  PID  PPID USER     STAT   VSZ %VSZ %CPU COMMAND
+    1     0 root     R     3164   0%   0% top -b
+```
+运行`docker stop`时会干净利落的退出：
+```bash
+$ /usr/bin/time docker stop test
+test
+real	0m 0.20s
+user	0m 0.02s
+sys	0m 0.04s
+```
+如果你忘记了在`ENTRYPOINT`开始处使用`exec`
+```dockerfile
+FROM ubuntu
+ENTRYPOINT top -b
+CMD --ignored-param1
+```
+运行后(为了下面步骤，指定一个name)：
+```bash
+$ docker run -it --name test top --ignored-param2
+Mem: 1704184K used, 352484K free, 0K shrd, 0K buff, 140621524238337K cached
+CPU:   9% usr   2% sys   0% nic  88% idle   0% io   0% irq   0% sirq
+Load average: 0.01 0.02 0.05 2/101 7
+  PID  PPID USER     STAT   VSZ %VSZ %CPU COMMAND
+    1     0 root     S     3168   0%   0% /bin/sh -c top -b cmd cmd2
+    7     1 root     R     3164   0%   0% top -b
+``
+从输出内容可以看到并不是`PID 1`
+
+当运行`docker stop test`时，该容器并没有直接退出，`stop`命令会在超时后强制发送`SIGKILL`。
+```bash
+$ docker exec -it test ps aux
+PID   USER     COMMAND
+    1 root     /bin/sh -c top -b cmd cmd2
+    7 root     top -b
+    8 root     ps aux
+$ /usr/bin/time docker stop test
+test
+real	0m 10.19s
+user	0m 0.04s
+sys	0m 0.03s
+```
+
+### 理解CMD与ENTRYPOINT相互影响
+`CMD`与`ENTRYPOINT`指令都是定义一个容器运行时执行的命令，下面有一些规则描述他们之间的协作。
+
+1. Dockerfile应该在结尾定义一个`CMD`或`ENTRYPOINT`
+2. 当容器作为一个可执行程序时，应该定义`ENTRYPOINT`
+3. `CMD`应该用来作为定义`ENTRYPOINT`的默认参数，或者在容器中执行点对点(ad-hoc)的命令
+4. 在容器启动时，`CMD`将会被其他替代参数覆写
+
+下面表格展示了`ENTRYPOINT`与`CMD`组合时，什么命令会被执行：
+
+|                            | No ENTRYPOINT              | ENTRYPOINT exec_entry p1_entry | ENTRYPOINT ["exec_entry", "p1_entry"]          |
+| -------------------------- | -------------------------- | ------------------------------ | ---------------------------------------------- |
+| No CMD                     | error, not allowed         | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry                            |
+| CMD [“exec_cmd”, “p1_cmd”] | exec_cmd p1_cmd            | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry exec_cmd p1_cmd            |
+| CMD [“p1_cmd”, “p2_cmd”]   | p1_cmd p2_cmd              | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry p1_cmd p2_cmd              |
+| CMD exec_cmd p1_cmd        | /bin/sh -c exec_cmd p1_cmd | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry /bin/sh -c exec_cmd p1_cmd |
+
+# VOLUME
