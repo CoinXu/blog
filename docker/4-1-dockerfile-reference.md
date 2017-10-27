@@ -158,12 +158,12 @@ CLI将.dockerignore文件解析为以换行符作为分割符的匹配模式列�
 */*/temp*
 temp?
 ```
-|     Rule       | Behavior   |
-| -------------- | ------     |
-| # comment      | 注释、忽略  |
-| */temp*        | 排除根目录中的`直接`子目录中任何以`temp`开头的文件或目录，比如文件`/somedir/temporary.txt`、目录`/somedir/temp` |
-| */*/temp*      | 排除根目录中的`二级`子目录内的以`temp`开头的文件或目录，比如 `/somedir/subdir/temporary.txt` |
-| temp?          | 排除根目录中名称为`temp`后跟一个字符的文件或目录，比如`/tempa`或`/tempb` |
+|     Rule       | Behavior                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| # comment      | 注释、忽略                                                                                                |
+| */temp*        | 排除根目录中的`直接`子目录中任何以`temp`开头的文件或目录，比如文件`/somedir/temporary.txt`、目录`/somedir/temp`  |
+| */*/temp*      | 排除根目录中的`二级`子目录内的以`temp`开头的文件或目录，比如 `/somedir/subdir/temporary.txt`                   |
+| temp?          | 排除根目录中名称为`temp`后跟一个字符的文件或目录，比如`/tempa`或`/tempb`                                       |
 
 匹配使用Go的[filepath.Match](http://golang.org/pkg/path/filepath#Match)规则，预处理步骤中将会删除开头与结尾的空白符，
 使用[filepath.Clean](http://golang.org/pkg/path/filepath/#Clean)清除`.`与`..`元素元素。预处理后的空白行将会被忽略。
@@ -311,7 +311,7 @@ RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
 # CMD
 `CMD`指令有三种使用形式
 + `CMD ["executable","param1","param2"]` 执行形式，也是首选形式
-+ `CMD ["param1","param2"]` 作为入口点(`ENTRYPOINT`)的默认参数
++ `CMD ["param1","param2"]` 作为`ENTRYPOINT`的默认参数
 + `CMD command param1 param2` shell命令形式
 
 一个Dockerfile中只能出现一次`CMD`指令，如果出现多次，只有最后一次出现的起作用。
@@ -340,7 +340,7 @@ CMD echo "This is a test." | wc -
 FROM ubuntu
 CMD ["/usr/bin/wc","--help"]
 ```
-如果你希望容器每次执行同样的程序，那么你应该考虑`ENTRYPOINT`与`CMD`结合使用，详见[ENTRYPOINT](https://docs.docker.com/engine/reference/builder/#entrypoint)
+如果你希望容器每次执行同样的程序，那么你应该考虑`ENTRYPOINT`与`CMD`结合使用，详见[ENTRYPOINT](#entrypoint)
 
 如果用户在运行`docker run`命令时指定了参数，将会覆盖默认的`CMD`指令。
 
