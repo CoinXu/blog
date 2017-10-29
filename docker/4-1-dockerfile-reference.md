@@ -653,3 +653,29 @@ sys	0m 0.03s
 | CMD exec_cmd p1_cmd        | /bin/sh -c exec_cmd p1_cmd | /bin/sh -c exec_entry p1_entry | exec_entry p1_entry /bin/sh -c exec_cmd p1_cmd |
 
 # VOLUME
+```dockerfile
+VOLUME ["/data"]
+```
+
+`VOLUME`指令创建一个具有指定全称的挂载点，将其标记为从本地主机或其他容器联结到容器挂载卷（译注：这句有点不通顺）。
+其值可以是JSON数组：`VOLUME ["/var/log/"]`，或者包含多个参数的纯字符串，如：`VOLUME /var/log` 或 `VOLUME /var/log /var/db`。
+Docker客户端的更多信息、示例及挂载相关指令，参考[使用Volumes共享目录](https://docs.docker.com/engine/tutorials/dockervolumes/#/mount-a-host-directory-as-a-data-volume)文档。
+
+Docker `run`命令使用镜像中指定位置的所有数据初始化新创建的卷，考虑如下Dockerfile片段：
+```dockerfile
+FROM ubuntu
+RUN mkdir /myvol
+RUN echo "hello world" > /myvol/greeting
+VOLUME /myvol
+```
+运行`docker run`，该镜像会在`/myvol`上创建一个新的挂载点，并且复制`greeting`文件到新创建的卷上。
+
+### 指定卷应该注意：
++ 基于windows的容器的卷：容器卷的标的必须是如下情况之一：
+  + 一个不存在或空目录
+  + C盘之外的驱动器(drive，译注：是否是指C盘外的盘才能做为Volume？由于译者没有windows环境，所以没做测试)
++ 在Dockerfile中更改卷：如果在某些步骤在卷声明之后修改了卷，这些修改会被丢弃。
++ JSON格式：指令将会被解析为JSON数组，所以需要使用双引号将参数括起来
++ 主机目录在容器运行时声明：主机目录(mountpoint)本质上是与主机相关的，这是为了维持镜像的可移值性。
+  因为给定的目录不能保证在所有的主机上可用，因此你无法从Dockerfile中挂载主机目录。
+  `VOLUME`指令不支持指定`host-dir`参数。在创建或运行容器时必须指定挂载点。
