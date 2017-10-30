@@ -679,3 +679,200 @@ VOLUME /myvol
 + 主机目录在容器运行时声明：主机目录(mountpoint)本质上是与主机相关的，这是为了维持镜像的可移值性。
   因为给定的目录不能保证在所有的主机上可用，因此你无法从Dockerfile中挂载主机目录。
   `VOLUME`指令不支持指定`host-dir`参数。在创建或运行容器时必须指定挂载点。
+
+# USER
+```dockerfile
+USER <user>[:<group>] or
+USER <UID>[:<GID>]
+```
+`USER`指令设置用户名(或UID)和可选的运行镜像时、以及Dockerfile中随后的`RUN`,`CMD`和`ENTRYPOINT`指令使用的用户组(或GID)。
+
+> __警告：__ 当用户没有所属组时(does doesn’t have a primary group)，镜像将会使用root组运行。
+
+# WORKDIR
+```dockerfile
+WORKDIR /path/to/workdir
+```
+`WORKDIR`为Dockerfile中随后的`RUN`,`CMD`,`ENTRYPOINT`,`COPY`与`ADD`指令提供工作目录。
+如果`WORKDIR`不存在，即使在随后的指令中并没有使用它，工作目录也会被创建。
+
+`WORKDIR`指令可以在Dockerfile中出现多次，如果设置了一个相对路径，它会相对于上一个`WORKDIR`指令，如:
+```dockerfile
+WORKDIR /a
+WORKDIR b
+WORKDIR c
+RUN pwd
+```
+该Dockerfile中最终的pwd的结果为`/a/b/c`
+
+`WORKDIR`可以解析在此之前使用`ENV`设置的环境变量，你只能使用在Dockerfile中显示设置的环境变量，如：
+```dockerfile
+ENV DIRPATH /path
+WORKDIR $DIRPATH/$DIRNAME
+RUN pwd
+```
+该Dockerfile中最终pwd结果为`path/$DIRNAME`
+
+# ARG
+```dockerfile
+ARG <name>[=<default value>]
+```
+`ARG`指令定义了一个变量，用户可以在使用`docker build`命令构建时添加`--build-arg <varname>=<value>`标志传递给构建器(builder)。
+如果用户指定了在Dockerfile中未定义的构建参数，则构建会输出警告。
+```docckerfile
+[Warning] One or more build-args [foo] were not consumed.
+```
+一个Dockerfile中可以包含一个或多个`ARG`，以下的Dockerfile是合法的：
+```dockerfile
+FROM busybox
+ARG user1
+ARG buildno
+...
+```
+
+> __警告：__ 不建议使用构建时变量来传递安全相关信息，比如github keys，用户凭证等。
+  因为任何用户都可以使用`docker history`命令看到构建时的变量值。
+
+### 默认值
+`ARG`指令可以设置一个默认值：
+```dockerfile
+FROM busybox
+ARG user1=someuser
+ARG buildno=1
+...
+```
+如果一个`ARG`指令有默认值，在构建时如果没有传入它的值时，构建器将会使用默认值。
+
+### 作用域
+`ARG`变量定义从它在Dockerfile中定义的行开始生效，而不是在命令行或其他地方使用参数。思考如下Dockerfile:
+```dockerfile
+1 FROM busybox
+2 USER ${user:-some_user}
+3 ARG user
+4 USER $user
+...
+```
+一个用户使用如下方式构建：
+```bash
+$ docker build --build-arg user=what_user .
+```
+
+第2行计算结果为`some_user`，因为`user`是在第3行定义的(译注：此时`ARG`参数还没生效呢)，
+第4行`USER`计算结果为`what_user`，因为此时`user`已经定义(译注：在第3行)，并且从命令行传入了`what_user`值。
+在`ARG`指令定义变量之前，任何使用变量的行为都会得到空字符串。
+
+`ARG`指令在其定义的构建阶段结束时失效(out of scope)，要在多个阶段使用参数，需要在每个阶段包含`ARG`指令。
+
+```dockerfile
+FROM busybox
+ARG SETTINGS
+RUN ./run/setup $SETTINGS
+
+FROM busybox
+ARG SETTINGS
+RUN ./run/other $SETTINGS
+```
+
+### 使用ARG变量
+你可以使用`ARG`或`ENV`指令来指定可用于`RUN`指令的变量，使用`ENV`指令定义的环境变量总是覆盖相同名称的`ARG`指令定义的变量。
+考虑下面这个包含一个`ARG`与`ENV`指令的Dockerfile:
+```dockerfile
+1 FROM ubuntu
+2 ARG CONT_IMG_VER
+3 ENV CONT_IMG_VER v1.0.0
+4 RUN echo $CONT_IMG_VER
+```
+假设使用如下命令构建该镜像：
+```bash
+$ docker build --build-arg CONT_IMG_VER=v2.0.1 .
+```
+该情况下，`RUN`指令使用`v1.0.0`替代用户传入的`v2.0.1`。该行为类似于shell脚本中本地作用域变量将覆盖作为参数传入的变量或他处继承的变量。
+
+在上面的例子使用不同的`ENV`指定值，你可以在`ARG`与`ENV`指令之间创建更有用的交互：
+```dockerfile
+1 FROM ubuntu
+2 ARG CONT_IMG_VER
+3 ENV CONT_IMG_VER ${CONT_IMG_VER:-v1.0.0}
+4 RUN echo $CONT_IMG_VER
+```
+不同于`ARG`，`ENV`的始终存在于构建镜像中，思考不使用`--build-arg`标识:
+```bash
+$ docker build .
+```
+该例中`CONT_IMG_VER`仍然存在镜像中，但是其值为`-v1.0.0`，因为取的是第3行设置的默认值。
+
+此示例中的变量扩展技术允许你从命令行传递参数，并通过使用`ENV`指令将它们一直保存在最终镜像中，变量扩展只支持部份Dockerfile指令。
+
+### 预定义ARG
+Docker有一组预定义`ARG`变量，你可以直接使用而不必使用相应的`ARG`指令声明：
++ HTTP_PROXY
++ http_proxy
++ HTTPS_PROXY
++ https_proxy
++ FTP_PROXY
++ ftp_proxy
++ NO_PROXY
++ no_proxy
+
+可以在命令行中使用标识传入它们的值：
+```bash
+--build-arg <varname>=<value>
+```
+默认情况下，这些预定义变量排除在`docker history`输出之外，排队它们降低了在`HTTP_PROXY`变量中意外泄露敏感认证信息的风险。
+
+考虑使用`--build-arg HTTP_PROXY=http://user:pass@proxy.lon.example.com`构建如下Dockerfile:
+```dockerfile
+FROM ubuntu
+RUN echo "Hello World"
+```
+在这种情况下，`HTTP_PROXY`变量的值在`docker history`中不可用，也不会缓存。如果你想修改地址，
+并且你的代理服务器改为`http://user:pass@proxy.sfo.example.com`，不会导致后续的构建发生缓存遗漏(cache miss)。
+
+如果你想覆盖此行为，你可以通过添加`ARG`声明：
+```dockerfile
+FROM ubuntu
+ARG HTTP_PROXY
+RUN echo "Hello World"
+```
+构建该Dockerfile时，`HTTP_PROXY`将保留在`docker history`中，并且更该值会使构建缓存失效。
+
+### 对构建缓存的影响
+因为`ENV`的存在，`ARG`变量不会保留在构建镜像中。然而`ARG`变量会以类似方式影响构建缓存。
+如果Dockerfile定义了一个`ARG`变量，其值与此前构建时的值不同，那么在第一次使用时将会出现`缓存遗漏(cache miss)`。
+具体而言，`ARG`指令之后的所有`RUN`指令隐含的(作为环境变量)使用`ARG`变量，因而会可以引发缓存遗漏。
+所有的预定义指令都不会缓存，除非在Dockerfile中有其声明。
+
+考虑如下两个Dockerfile
+```dockerfile
+1 FROM ubuntu
+2 ARG CONT_IMG_VER
+3 RUN echo $CONT_IMG_VER
+```
+```dockerfile
+1 FROM ubuntu
+2 ARG CONT_IMG_VER
+3 RUN echo hello
+```
+如果在命令行中指定`--build-arg CONT_IMG_VER=<value>`，两种情况下，第2行指令不会导致缓存遗漏，第3行将会发生缓存遗漏。
+`ARG CONT_IMG_VER`导致`RUN`所在的行识别为与运行`CONT_IMG_VER=<value>` echo hello相同。所以，如果`<value>`发生了变化，将会出现缓存遗漏。
+
+考虑如下示例在相同命令下运行：
+```dockerfile
+1 FROM ubuntu
+2 ARG CONT_IMG_VER
+3 ENV CONT_IMG_VER $CONT_IMG_VER
+4 RUN echo $CONT_IMG_VER
+```
+该例中，缓存遗漏发生在第3行。因为`EVN`中的变量的值引用了`ARG`变量，并且使用命令行使该值发生了变化，所以发生了遗漏。
+此例中`ENV`命令便镜像包含该值。
+
+如果`ENV`指令覆写了同类`ARG`指令，如：
+```dockerfile
+1 FROM ubuntu
+2 ARG CONT_IMG_VER
+3 ENV CONT_IMG_VER hello
+4 RUN echo $CONT_IMG_VER
+```
+第3行不会发生缓存遗漏，因为`CONT_IMG_VER`的值为常量(hello)，因此在`RUN`(第4行)上使用的环境变量和值在构建时不会改变。
+
+# ONBUILD
