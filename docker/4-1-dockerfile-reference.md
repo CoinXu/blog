@@ -967,3 +967,156 @@ HEALTHCHECK --interval=5m --timeout=3s \
 `HEALTHCECK`在Docker 1.12版本中加入。
 
 # SHELL
+```dockerfile
+SHELL ["executable", "parameters"]
+```
+`SHELL`指令使shell形式命令使用的的默认shell可以被覆盖，默认shell在Linux上为`["/bin/sh", "-c"]`，
+Windows上为`["cmd", "/S", "/C"]`，Dockerfile中的`SHELL`指令必须使用JSON形式书写。
+
+`SHELL`指令在Windows上特别有用，Windows中有两个常用的但差别非常大的原生shell：`cmd`与`powershell`，
+以及包含`sh`的备用shell。
+
+`SHELL`指令可以出现多闪，每个`SHELL`指令覆写之前所有的`SHELL`指令，并且影响其后的所有指令。如：
+```dockerfile
+FROM microsoft/windowsservercore
+
+# 执行 cmd /S /C echo default
+RUN echo default
+
+# 执行 cmd /S /C powershell -command Write-Host default
+RUN powershell -command Write-Host default
+
+# 执行 powershell -command Write-Host hello
+SHELL ["powershell", "-command"]
+RUN Write-Host hello
+
+# 执行 cmd /S /C echo hello
+SHELL ["cmd", "/S"", "/C"]
+RUN echo hello
+```
+`RUN`, `CMD`和`ENTRYPOINT`指令的shell形式会受`SHELL`指令影响。
+
+下面的示例是在Windows查找可以使用`SHELL`流化(streamlined)的常见模式：
+> 原文：
+> The following example is a common pattern found on Windows which can be streamlined by using the SHELL instruction:
+
+```dockerfile
+...
+RUN powershell -command Execute-MyCmdlet -param1 "c:\foo.txt"
+...
+```
+docker调用该命令结果为：
+```dockerfile
+cmd /S /C powershell -command Execute-MyCmdlet -param1 "c:\foo.txt"
+```
+
+导致无效有两个原因，其一，有个不必要的`cmd.exe`命令处理器(又称shell)被调用。
+其二，每个shell形式的`RUN`指令需要在命令前添加一个额外的`powershell -command`前缀。
+
+要使期有效，有两种机制可用，其一是使用`RUN`命令的JSON形式：
+```dockerfile
+...
+RUN ["powershell", "-command", "Execute-MyCmdlet", "-param1 \"c:\\foo.txt\""]
+...
+```
+虽然使用JSON形式可以提供明确的指令，并且不会使用不必要的`cmd.exe`，但它需要使用双引号与转义，因而变得冗长。
+替代机制是使用`SHELL`指令和shell形式，为Windows用户提供更接近原有的语法，在与`escape`解析指令结合使用是更为明显：
+```dockerfile
+# escape=`
+
+FROM microsoft/nanoserver
+SHELL ["powershell","-command"]
+RUN New-Item -ItemType Directory C:\Example
+ADD Execute-MyCmdlet.ps1 c:\example\
+RUN c:\example\Execute-MyCmdlet -sample 'hello world'
+```
+结果为：
+```dockerfile
+PS E:\docker\build\shell> docker build -t shell .
+Sending build context to Docker daemon 4.096 kB
+Step 1/5 : FROM microsoft/nanoserver
+ ---> 22738ff49c6d
+Step 2/5 : SHELL powershell -command
+ ---> Running in 6fcdb6855ae2
+ ---> 6331462d4300
+Removing intermediate container 6fcdb6855ae2
+Step 3/5 : RUN New-Item -ItemType Directory C:\Example
+ ---> Running in d0eef8386e97
+
+
+    Directory: C:\
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----       10/28/2016  11:26 AM                Example
+
+
+ ---> 3f2fbf1395d9
+Removing intermediate container d0eef8386e97
+Step 4/5 : ADD Execute-MyCmdlet.ps1 c:\example\
+ ---> a955b2621c31
+Removing intermediate container b825593d39fc
+Step 5/5 : RUN c:\example\Execute-MyCmdlet 'hello world'
+ ---> Running in be6d8e63fe75
+hello world
+ ---> 8e559e9bf424
+Removing intermediate container be6d8e63fe75
+Successfully built 8e559e9bf424
+PS E:\docker\build\shell>
+```
+
+`SHELL`指令也可以用于修改shell操作方式，例如，在Windows上使用`HELL cmd /S /C /V:ON|OFF`，
+可以修改延时的环境变量扩展语义(原文：delayed environment variable expansion semantics could be modified. 译者不明白这个命令做什么的)。
+
+`SHELL`指也可以在Linux上使用替换shell，如`zsh`，`csh`,`tcsh`等。
+
+`SHELL`在Docker 1.12版本中引入。
+
+# Dockerfile 示例
+下面你可以看到一些Dockerfile语法的例子，如果你对更真实的内容感兴趣，请查看[Docker化示例](https://docs.docker.com/engine/examples/)。
+```dockerfile
+# Nginx
+#
+# VERSION               0.0.1
+
+FROM      ubuntu
+LABEL Description="This image is used to start the foobar executable" Vendor="ACME Products" Version="1.0"
+RUN apt-get update && apt-get install -y inotify-tools nginx apache2 openssh-server
+```
+
+```dockerfile
+# Firefox over VNC
+#
+# VERSION               0.3
+
+FROM ubuntu
+
+# Install vnc, xvfb in order to create a 'fake' display and firefox
+RUN apt-get update && apt-get install -y x11vnc xvfb firefox
+RUN mkdir ~/.vnc
+# Setup a password
+RUN x11vnc -storepasswd 1234 ~/.vnc/passwd
+# Autostart firefox (might not be the best way, but it does the trick)
+RUN bash -c 'echo "firefox" >> /.bashrc'
+
+EXPOSE 5900
+CMD    ["x11vnc", "-forever", "-usepw", "-create"]
+```
+
+```dockerfile
+# Multiple images example
+#
+# VERSION               0.1
+
+FROM ubuntu
+RUN echo foo > bar
+# Will output something like ===> 907ad6c2736f
+
+FROM ubuntu
+RUN echo moo > oink
+# Will output something like ===> 695d7793cbe4
+
+# You'll now have two images, 907ad6c2736f with /bar, and 695d7793cbe4 with
+# /oink.
+```
