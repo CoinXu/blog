@@ -918,3 +918,52 @@ STOPSIGNAL signal
 `STOPSIGNAL`指令设置发送到容器使其退出的系统调用号，该信号可以是一个与系统调用表相匹配的无符号数字，比如9，
 或者是一个`SIGNAME`格式的信号名称，如`SIGKILL`。
 
+# HEALTHCHECK
+`HEALTHCHECK`有两种形式：
++ `HEALTHCHECK [OPTIONS] CMD command` 通过在容器内运行命令来检查容器的健康状况
++ `HEALTHCHECK NONE` 禁用所有从基础镜像继承来的 healthcheck
+
+`HEALTHCHECK`指令告诉容器如何检测一个容器能正常工作，比如可以检测一个web服务是否卡在一个无限循环中，
+从而不能处理新的连接请求，即使该服务处理进程还在运行，也可以进行检测。
+
+当一个容器指定了了`healthcheck`时，它除了正常状态外，还有一个健康状态，该状态最初是`staring`(译注：原文:This status is initially staring)。
+每当一个健康检测通过时，无论之前的状态是什么，该状态都会变为`healthy`，经过一定次数的连续失败后，该状态变为`unhealthy`。
+
+`CMD`之前的`OPTIONS`的值可以为：
++ `--interval=DURATION` (default: 30s)
++ `--timeout=DURATION` (default: 30s)
++ `--start-period=DURATION` (default: 0s)
++ `--retries=N` (default: 3)
+
+健康检查在容器启动后`interval`秒开始首次运行，每次检测完之后，隔`interval`秒后再次检测。
+
+如果单次健康检测耗时超过`timeout`，则认为检测失败。
+
+如果容器健康检测连续`retries`次失败，则认为容器为`unhealthy`。
+
+启动时间为容器初始化的时间，在此期间检测到的失败不计入最大重试次数。但是，如果健康检测在开始其间成功，
+则认为容器已启动，并且所有连续的失败将计入最大重试数中。
+
+一个Dockerfile中只能有一个`HEALTHCHECK`指令，如果你列出了多个，只有最后一个生效。
+
+`CMD`之后的命令可以是shell命令(如：HEALTHCHECK CMD /bin/check-running)或执行形式数组(同Dockerfile其他命令一样，比如[ENTRYPOINT](#entrypoint))。
+
+命令的退退出状态标明容器的运行状态，可能的值为：
++ `0: success` 容器健康，可以使用
++ `1: unhealthy` 容器运行不正常
++ `2: reserved` 保留退出码，不要使用该退出码
+
+比如，每隔五分钟左右检测网站服务能够在3秒内提供其主页面：
+```dockerfile
+HEALTHCHECK --interval=5m --timeout=3s \
+  CMD curl -f http://localhost/ || exit 1
+```
+
+为了debug失败原因，命令在stdout或stderr上输出的任何内容(utf-8编码)都会存在健康状态里，
+并且可以通过`docker inspect`查询。此类输出应该保持短小(仅存储输出的前4096个字节)。
+
+当容器的健康状态发生变化时，将会使用新的状态生成一个`health_status`事件。
+
+`HEALTHCECK`在Docker 1.12版本中加入。
+
+# SHELL
