@@ -13,8 +13,9 @@
 + [安装](./docker/2-install.md)
 + [Docker 概览](./docker/3-docker-overview.md)
 + [使用镜像](./docker/4-work-in-images.md)
-  + [Dockerfile参考](./docker/4-1-dockerfile-reference.md)
   + [创建基础镜像](./docker/4-2-create-a-base-image.md)
+  + [Dockerfile参考](./docker/4-1-dockerfile-reference.md)
+  + [使用多阶段构建](./docker/4-3-user-multi-stage-builds.md)
 + [容器数据存储](./docker/5-storage-data-within-containers.md)
   + [镜像、容器与存储驱动](./docker/5-1-about-images-containers-and-storage-drivers.md)
 
