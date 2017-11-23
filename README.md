@@ -20,4 +20,5 @@
   + [镜像、容器与存储驱动](./docker/5-1-about-images-containers-and-storage-drivers.md)
   
 ## 计算机图形学
-+ [http://netclass.csu.edu.cn/](http://netclass.csu.edu.cn/)
++ [http://netclass.csu.edu.cn/NCourse/hep089/](http://netclass.csu.edu.cn/NCourse/hep089/)
++ [https://www.bilibili.com/video/av15445516/](https://www.bilibili.com/video/av15445516/)
