@@ -618,7 +618,7 @@ Load average: 0.01 0.02 0.05 2/101 7
   PID  PPID USER     STAT   VSZ %VSZ %CPU COMMAND
     1     0 root     S     3168   0%   0% /bin/sh -c top -b cmd cmd2
     7     1 root     R     3164   0%   0% top -b
-``
+```
 从输出内容可以看到并不是`PID 1`
 
 当运行`docker stop test`时，该容器并没有直接退出，`stop`命令会在超时后强制发送`SIGKILL`。
