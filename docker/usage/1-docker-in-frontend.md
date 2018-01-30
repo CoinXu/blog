@@ -145,6 +145,24 @@ For help see https://nodejs.org/en/docs/inspector
 
 ## 目前未解决的坑
 1. windows下同步文件到docker后，不会触发node的fsevent相关事件，基于这类事件的程序（如webpack开启watch选项）将会失效。之前搜过一些issue，好像是有第三方的程序包可以解决这个问题。因为最近一直在写服务端相关的东西，没用到`webpack watch`，所以还没折腾这个坑。
+```bash
+# 解决方案 https://pypi.python.org/pypi/docker-windows-volume-watcher
+# install
+pip install docker-windows-volume-watcher
+
+# usage
+## Monitor all directory bindings of all containers. The script will listen for container start/stop events and notify all running containers about file changes.
+docker-volume-watcher
+
+## Monitor only bindings of container container_name.
+docker-volume-watcher container_name
+
+## Monitor only binding of container_name to host directory C:\some\directory.
+docker-volume-watcher container_name C:\some\directory
+
+## You can also specify wildcards with * and ? characters. For example: monitor only bindings of containers with names containing myproject to directories starting with C:\project\folder\.
+docker-volume-watcher *myproject* C:\project\folder\*
+```
 2. 使用powershell做为终端，有的时候会报错`process.cwd()`相关错误，需要重开一个powsershell进入docker容器才可以。
 
 正常的开发环境中还需要redis、mysql这样的持久化存储方案，如果也需要使用docker容器话（当然我也是建议您使用docker容器，而不必装一大堆软件），可以认真阅读docker相关资料并搭建自己的开发环境。
