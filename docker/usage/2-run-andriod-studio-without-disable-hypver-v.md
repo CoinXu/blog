@@ -12,14 +12,13 @@ Android Studio提示如下图：
 ### 总不能我要提交代码的时候(git在docker容器中)又换回Docker，重启一次PC吧？
 
 # 解决方案
-[Visual Studio Emulator for Android](https://www.visualstudio.com/vs/msft-android-emulator/)
-安装，启动一个Device，点击Android Studio上的运行按钮。
+Window下除了使用Vistua Studio的模拟器外，还可以选择由微软官方提供的[Visual Studio Emulator for Android](https://www.visualstudio.com/vs/msft-android-emulator/)，传说性能更好。
 
-然后就可能会发现，弹出的设备选择面板上并没有你已启动的设备....
+下载安装并启动一个Device，点击Android Studio上的运行按钮，然后就可能会发现，弹出的设备选择面板上并没有你已启动的设备....
 ![connected-devices-none](https://raw.githubusercontent.com/CoinXu/blog/master/docker/usage/connected-devices-none.png)
 
-搜索之后发现了该篇[博客](https://www.clearlyagileinc.com/blog/using-the-visual-studio-android-emulator-with-android-studio)，
-上面提到需要修改windows注册表：`HKEY_LOCAL_MACHINE > SOFTWARE > WOW6432Node > Android SDK Tools`。
+一番搜索之后发现了该篇[博客](https://www.clearlyagileinc.com/blog/using-the-visual-studio-android-emulator-with-android-studio)，
+其文表明Visual Studio Emulator for Android安装后以`C:\Program Files (x86)\Android\android-sdk`为默认的Andriod SDK路径，而Android Studio默认是将SDK下载到`C:\Users\[USER]\AppData\Local\Android\Sdk`。解决办法是修改windows注册表：`HKEY_LOCAL_MACHINE > SOFTWARE > WOW6432Node > Android SDK Tools`。
 
 打开注册表，并导航到上面的目录，添加`Android SDK Tools`：
 ![connected-devices-none](https://raw.githubusercontent.com/CoinXu/blog/master/docker/usage/reg-androiod-sdk-tools.png)
