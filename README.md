@@ -25,5 +25,3 @@
 ## 计算机图形学
 + [http://netclass.csu.edu.cn/NCourse/hep089/](http://netclass.csu.edu.cn/NCourse/hep089/)
 + [https://www.bilibili.com/video/av15445516/](https://www.bilibili.com/video/av15445516/)
-
-
