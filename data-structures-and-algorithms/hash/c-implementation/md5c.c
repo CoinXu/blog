@@ -25,6 +25,8 @@ These notices must be retained in any copies of any part of this
 documentation and/or software.
 */
 
+#define PROTOTYPES 1
+
 #include "global.h"
 #include "md5.h"
 
@@ -100,7 +102,7 @@ static unsigned char PADDING[64] = {
 /* MD5 initialization. Begins an MD5 operation, writing a new context. */
 void MD5Init (context) MD5_CTX *context;  /* context */
 {
-	context->count[0] = context>count[1] = 0;
+	context->count[0] = context->count[1] = 0;
 	/* Loadmagic intialization contants */
 	context->state[0] = 0x67452301;
 	context->state[1] = 0xefcdab89;
@@ -131,7 +133,7 @@ unsigned int inputLen;
 
 	// Transform as many times as possible.
 	if (inputLen >= partLen) {
-		MD5_memset((POINTER) & context->buffer[index], (POINTER)input, partLen);
+		MD5_memcpy((POINTER) & context->buffer[index], (POINTER)input, partLen);
 		MD5Transform(context->state, context->buffer);
 
 		for (i = partLen; i + 63 < inputLen; i += 64) {
@@ -292,8 +294,8 @@ unsigned int len;
 /*
  * Decodes input (unsigned char) into ouput (UINT4). Assumes len is a mutiple of 4.
  */
-static void Decode (ouput, input, len)
-UINT4 *ouput;
+static void Decode (output, input, len)
+UINT4 *output;
 unsigned char *input;
 unsigned int len;
 {
@@ -323,11 +325,11 @@ unsigned int len;
  */
 static void MD5_memset (ouput, input, len)
 POINTER ouput;
-int value;
+int input;
 unsigned int len;
 {
 	unsigned int i;
 
 	for (i = 0; i < len; i++)
-		((char *)ouput)[i]= (char)value;
+		((char *)ouput)[i]= (char)input;
 }

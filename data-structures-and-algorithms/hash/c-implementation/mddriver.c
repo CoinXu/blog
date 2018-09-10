@@ -89,8 +89,12 @@ char *argv[];
 {
 	int i;
 
+	printf("argv: %d\n", argc);
+
 	if (argc > 1) {
 		for (i = 1; i < argc; i++) {
+			printf("argc[%d]: %s\n", i, argv[i]);
+
 			if (argv[i][0] == '-' && argv[i][1] == 's')
 				MDString (argv[i] + 2);
 			else if (strcmp (argv[i], "-t") == 0)
