@@ -4,6 +4,9 @@
 + [概述](./Front-end-engineering/1-intro.md)
 + [view与model分离思考](./Front-end-engineering/2-split-view-and-model.md)
 
+## 算法
++ [md5](./data-structures-and-algorithms/hash/md5.md)
+
 ## 翻译
 + SVG
   + [Animate](./svg/SVG-<Animate>-begin.md)

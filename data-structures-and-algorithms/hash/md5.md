@@ -78,9 +78,9 @@ For i = 0 to N/16-1 do
  	end /* of loop on j */
 
 	/* Save A as AA, B as BB, C as CC, and D as DD. */
-    AA = A
-    BB = B
-  	CC = C
+	AA = A
+	BB = B
+	CC = C
 	DD = D
 	/* Round 1. */
 	/* Let [abcd k s i] denote the operation
@@ -136,10 +136,10 @@ TODO
 
 # C语言实现
 包含如下的文件：
-1. global.h    -- 全局头文件
-2. md5.h       -- MD5头文件
-3. md5c.c      -- MD5源码
-4. mddriver.c  -- md2,md4,md5测试
+1. [global.h](./c-implementation/global.h)        -- 全局头文件
+2. [md5.h](./c-implementation/md5.h)              -- MD5头文件
+3. [md5c.c](./c-implementation/md5c.c)            -- MD5源码
+4. [mddriver.c](./c-implementation/mddriver.c)    -- md2,md4,md5测试
  
 # 参考
 1. [RF 1321](https://www.ietf.org/rfc/rfc1321.txt)
