@@ -1,14 +1,11 @@
 # 如何提升前端开发效率
 
 ## 影响前端开发效率因素
-+ 开发环境搭建
-+ 模块与工作流
-+ 代码规范与错误检测
++ 开发环境越来越复杂
 + UI/UE规范不统一
 + 重复实现
 + 联调接口极其耗时
 + 移动端开发时debug难度增加
-+ 多个环境下代码打包的问题
 
 # 解决方案
 
@@ -18,30 +15,52 @@
 配置代码少则数百行，多则近千行，在不同版本、系统下的兼容问题比比皆是。如果需要一步步搭建这样一样开发环境，少则半天，多则数天。
 即使之前已经搭建过很多次，依然会出现各种始料未及的问题。
 
-书写配置代码一般流程如下：
+一个较为完整的前端开发环境包含文件如下：
 ```
-package.json
-webpack.config.js
-webpack.config.dev.js
-webpack.config.production.js
-webpack.config.test.js
-kamar.config.js
-.gitignore
-.npmignore
-.babelrc
-.editorconfig
-.eslint
+├── dist
+│   ├── prod
+│   └── test
+├── babel.config.js
+├── .browserslistrc
+├── .editorconfig
+├── .env.development
+├── .env.mock
+├── .env.production
+├── .env.testing
+├── .gitignore
+├── package.json
+├── package-lock.json
+├── postcss.config.js
+├── .prettierignore
+├── .prettierrc
+├── public
+│   ├── favicon.ico
+│   ├── index.html
+├── README.md
+├── src
+│   ├── App.js
+│   ├── assets
+│   ├── common
+│   ├── components
+│   ├── models
+│   ├── plugins
+│   ├── store
+│   └── views
+├── test
+└── vue.config.js
 ```
+如果全部手写配置及测试通过，耗时大约0.5~3天。
 
 在生态日益完整的的今天，前端开发终于可以像其他社区一样，可以通过脚本工具来一键构建开发环境。
 vue-cli与create-react-app等，都是较为成熟的工具。
-```
+
+```bash
 vue-cli create ${project_name}
 ```
+基本上一两行shell命令可以完成，耗时在5分钟以内。
 
 如果这些工具不能满足项目的需要，也可以将配置代码稍加改动以适应项目。
-至此，前端开发环境基本不用耗费什么时间了，除非使用业内较少使用的技术方案，比如typescript、kolin等。
-
+至此，前端开发环境基本不用耗费什么时间了，除非使用业内较少使用的技术方案，比如typescript、kotlin等。
 
 ## 与业务需求结合，建立标准、规范UI/UE库
 从开发方式上来说，前端大约经历了如下阶段：
@@ -69,13 +88,19 @@ vue-cli create ${project_name}
 </main>
 <copyright />
 ```
-
 其中的`header`、`main`、`input`、`button`、`copyright`都可以由UI/UE库或业务组件库提供，一次书写，多处使用，并且表现与形为均一致。
 
 在现代web应用中，除了操作步骤增加之外，还格外注重用户体验。除了正常的业务逻辑，更多还需要考虑异常情况，
 比如提醒、代码或服务出现异常、网络传输缓慢等。因而界面上会维护很多状态，在这些状态下尽可能提醒用户进行恰当的处理。
 仅仅是组件化是难以维护这样复杂的代码，MVVM应运而生，前端由此进入数据驱动UI的时代。
 
+因此，我们基于开源社区代码并结合实际业务，抽离了两个UI库，分别为PC与Mobile前端项目提供完备的UI/UE组件，界面由一个个封装好的组件拼装起来，开发人员不必关注其内部实现。
+```xml
+<main>
+  <time-picker active={now()} on-change={onTimeChange}/>
+  <button type="submit" icon="submit" on-click={onSubmit} />
+</main>
+```
 
 ## 抽离常用的代码，形成辅助工具库
 在前端现有的生态中，各类工具函数库已经较为完善，使用这些工具函数库可以解决大部份重复的代码逻辑。
@@ -90,15 +115,12 @@ function userNameValidator(username) {
   if (!username) {
   	return 'username required';
   }
-
   if (username.length > 32) {
   	return 'username length must less than 32';
   }
-
   if (!/\w/.test(username)) {
   	return 'username may be a-z, A-Z, 0-9, or _';
   }
-
   return null;
 }
 // 验证密码函数...
@@ -113,7 +135,6 @@ function userNameValidator(username) {
 还以用户登录场景而言，使用该工具库代码如下：
 ```js
 import { Reviser, TypeString, Required, MaxLength, Pattern } from 'data-reviser';
-
 // 定义一个model
 class SignIn extends Reviser {
   @Pattern(/\w/)
@@ -124,7 +145,6 @@ class SignIn extends Reviser {
 
   password = '';
 }
-
 // 使用
 const sign = new SignIn();
 const message = sign.map({ username: '', password: '' });
@@ -167,9 +187,7 @@ Logger.create('ui').trace('hello world');
 ```
 
 在pc上打开`http://logservertest.100.com/real-time?namespace={namespace}`可以立马看到如下日志
-```
+```bash
 # [server time][client time][level]: {message}
 [2018-09-29 14:23:35][2018-09-29 14:23:34]: hello world
 ```
-
-## 尽量参数化不同环境下的代码配置
