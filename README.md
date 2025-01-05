@@ -13,6 +13,7 @@
 
 # 后端
 ### 数据库
++ [单点登录融合用户账户管理方案](./backend/database/sso/README.md)
 + [MongoDB Replica Set在生产环境中部署](./backend/database/MongoDB-Replica-Set-Deploy/README.md)
 
 # 算法
